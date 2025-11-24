@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>롯데제과 러시아법인 - 재고 현황</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 제품 재고 현황</h1>
+            <div class="header-info">
+                <span class="update-time">최종 업데이트: <span id="lastUpdate">2024-11-21</span></span>
+            </div>
+        </header>
+
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-title">총 재고량</div>
+                <div class="card-value" id="totalStock">-</div>
+                <div class="card-unit">박스</div>
+            </div>
+            <div class="card">
+                <div class="card-title">제품 종류</div>
+                <div class="card-value" id="productCount">-</div>
+                <div class="card-unit">SKU</div>
+            </div>
+            <div class="card">
+                <div class="card-title">평균 유통기한</div>
+                <div class="card-value" id="avgShelfLife">-</div>
+                <div class="card-unit">%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">경고 제품</div>
+                <div class="card-value warning" id="warningCount">-</div>
+                <div class="card-unit">박스</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>보관창고:</label>
+                <select id="warehouseFilter">
+                    <option value="all">전체</option>
+                    <option value="LProduct" selected>LProduct</option>
+                    <option value="기타">기타</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>지역:</label>
+                <select id="regionFilter">
+                    <option value="all">전체</option>
+                    <option value="내수용">내수용</option>
+                    <option value="벨라루스용">벨라루스용</option>
+                    <option value="카작용">카작용</option>
+                    <option value="소머리">소머리</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>맛:</label>
+                <select id="categoryFilter">
+                    <option value="all">전체</option>
+                    <option value="오리지날">오리지날</option>
+                    <option value="카카오">카카오</option>
+                    <option value="바나나">바나나</option>
+                    <option value="딸기">딸기</option>
+                    <option value="치즈">치즈</option>
+                    <option value="아망테">아망테</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>패키지:</label>
+                <select id="productFilter">
+                    <option value="all">전체</option>
+                    <option value="4봉">4봉</option>
+                    <option value="6봉">6봉</option>
+                    <option value="12봉">12봉</option>
+                    <option value="16봉">16봉</option>
+                    <option value="48봉">48봉</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>검색:</label>
+                <input type="text" id="searchInput" placeholder="제품명 검색...">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="stockTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-column="code">제품코드</th>
+                        <th class="sortable" data-column="name">제품명</th>
+                        <th class="sortable" data-column="category">대분류</th>
+                        <th class="sortable" data-column="product">중분류</th>
+                        <th class="sortable" data-column="productionDate">유통기한</th>
+                        <th class="sortable" data-column="status">보관상태</th>
+                        <th class="sortable" data-column="stock">재고량(박스)</th>
+                        <th class="sortable" data-column="shelfLife">유통기한구간</th>
+                        <th>재고 현황</th>
+                    </tr>
+                </thead>
+                <tbody id="stockTableBody">
+                    <!-- 데이터가 JavaScript로 삽입됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button id="prevPage" class="page-btn">이전</button>
+            <span class="page-info">
+                <span id="currentPage">1</span> / <span id="totalPages">1</span> 페이지
+            </span>
+            <button id="nextPage" class="page-btn">다음</button>
+            <select id="itemsPerPage">
+                <option value="10">10개씩</option>
+                <option value="25">25개씩</option>
+                <option value="50">50개씩</option>
+                <option value="100" selected>100개씩</option>
+            </select>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
