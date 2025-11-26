@@ -1,18 +1,10 @@
 // ============================================
-// 로그인 관리
+// 로그인 관리 & Google Sheets 연동
 // ============================================
 
-// 사용자 계정 정보 (실제 환경에서는 서버에서 관리해야 함)
-const USERS = {
-    'admin': {
-        password: 'lotte2024', // 실제 환경에서는 해시화 필요
-        name: '관리자'
-    },
-    'moscow': {
-        password: 'moscow123',
-        name: '모스크바지사'
-    }
-};
+// Google Apps Script Web App URL
+const API_URL = 'https://script.google.com/macros/s/AKfycbz1NrAfdxbbaVtogDlRETcedUbjfTYVRZ9tuQBo53vHw3qCY4CBfSXh6J9jZDwXV4nE/exec';
+const API_TOKEN = 'lotte-stock-2024'; // Admin 스프레드시트의 API_TOKEN과 일치해야 함
 
 // 로그인 체크
 function checkAuth() {
@@ -20,63 +12,96 @@ function checkAuth() {
     const rememberMe = localStorage.getItem('rememberMe') === 'true';
 
     if (currentUser && rememberMe) {
-        showDashboard(currentUser);
-        return true;
-    } else if (currentUser) {
-        // 세션 기반 로그인 (페이지 새로고침 시 로그아웃)
-        sessionStorage.setItem('sessionUser', currentUser);
-        showDashboard(currentUser);
-        return true;
+        try {
+            const userData = JSON.parse(currentUser);
+            showDashboard(userData);
+            return true;
+        } catch (e) {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('rememberMe');
+        }
     }
 
     const sessionUser = sessionStorage.getItem('sessionUser');
     if (sessionUser) {
-        showDashboard(sessionUser);
-        return true;
+        try {
+            const userData = JSON.parse(sessionUser);
+            showDashboard(userData);
+            return true;
+        } catch (e) {
+            sessionStorage.removeItem('sessionUser');
+        }
     }
 
     return false;
 }
 
-// 로그인 처리
-function handleLogin(event) {
+// 로그인 처리 (Google Sheets API 연동)
+async function handleLogin(event) {
     event.preventDefault();
 
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const rememberMe = document.getElementById('rememberMe').checked;
     const errorElement = document.getElementById('loginError');
+    const loginBtn = event.target.querySelector('button[type="submit"]');
 
-    // 사용자 인증
-    if (USERS[username] && USERS[username].password === password) {
-        // 로그인 성공
-        if (rememberMe) {
-            localStorage.setItem('currentUser', username);
-            localStorage.setItem('rememberMe', 'true');
+    // 로딩 상태
+    loginBtn.disabled = true;
+    loginBtn.textContent = '로그인 중...';
+
+    try {
+        // Google Sheets API 호출
+        const url = `${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data) {
+            // 로그인 성공
+            const userData = {
+                username: result.data.username,
+                name: result.data.name
+            };
+
+            if (rememberMe) {
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                localStorage.setItem('rememberMe', 'true');
+            } else {
+                sessionStorage.setItem('sessionUser', JSON.stringify(userData));
+            }
+
+            showDashboard(userData);
         } else {
-            sessionStorage.setItem('sessionUser', username);
-        }
+            // 로그인 실패
+            errorElement.textContent = result.message || '로그인에 실패했습니다.';
+            errorElement.style.display = 'block';
 
-        showDashboard(username);
-    } else {
-        // 로그인 실패
-        errorElement.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 3000);
+
+            loginBtn.disabled = false;
+            loginBtn.textContent = '로그인';
+        }
+    } catch (error) {
+        console.error('로그인 오류:', error);
+        errorElement.textContent = '서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.';
         errorElement.style.display = 'block';
 
-        // 3초 후 에러 메시지 숨김
         setTimeout(() => {
             errorElement.style.display = 'none';
         }, 3000);
+
+        loginBtn.disabled = false;
+        loginBtn.textContent = '로그인';
     }
 }
 
 // 대시보드 표시
-function showDashboard(username) {
-    const userInfo = USERS[username];
-
+function showDashboard(userData) {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainDashboard').style.display = 'block';
-    document.getElementById('currentUser').textContent = userInfo ? userInfo.name : username;
+    document.getElementById('currentUser').textContent = userData.name || userData.username;
 
     // 데이터 로드 (최초 1회만)
     if (stockData.length === 0) {
@@ -157,34 +182,41 @@ function updateLastUpdateTime() {
     }
 }
 
-// 제품코드 마스터 데이터 로드
+// 제품코드 마스터 데이터 로드 (Google Sheets API)
 async function loadProductCodes() {
     try {
-        const response = await fetch('data/DB_productcode.csv');
-        const text = await response.text();
-        const products = parseCSV(text);
+        const url = `${API_URL}?action=getProductCodes&token=${API_TOKEN}`;
+        const response = await fetch(url);
+        const result = await response.json();
 
-        // 제품코드를 키로 하는 맵 생성 (제품명, 지역분류, 대분류, 중분류 포함)
-        products.forEach(product => {
-            const code = product['제품코드'];
-            const koreanName = product['제품명(한국어)'];
-            const region = product['지역분류'] || '기타'; // 지역분류
-            const category = product['구분(맛)'] || '기타'; // 대분류
-            const subCategory = product['구분(패키지)'] || '기타'; // 중분류
+        if (result.status === 'success' && result.data) {
+            const products = result.data;
 
-            if (code && koreanName) {
-                productCodeMap[code] = {
-                    name: koreanName,
-                    region: region,
-                    category: category,
-                    subCategory: subCategory
-                };
-            }
-        });
+            // 제품코드를 키로 하는 맵 생성 (제품명, 지역분류, 대분류, 중분류 포함)
+            products.forEach(product => {
+                const code = product['제품코드'];
+                const koreanName = product['제품명(한국어)'];
+                const region = product['지역분류'] || '기타'; // 지역분류
+                const category = product['구분(맛)'] || '기타'; // 대분류
+                const subCategory = product['구분(패키지)'] || '기타'; // 중분류
 
-        console.log('제품코드 매핑 완료:', Object.keys(productCodeMap).length, '개');
+                if (code && koreanName) {
+                    productCodeMap[code] = {
+                        name: koreanName,
+                        region: region,
+                        category: category,
+                        subCategory: subCategory
+                    };
+                }
+            });
+
+            console.log('제품코드 매핑 완료:', Object.keys(productCodeMap).length, '개');
+        } else {
+            throw new Error(result.message || '제품코드 데이터 로드 실패');
+        }
     } catch (error) {
         console.error('제품코드 로드 실패:', error);
+        alert('제품코드 데이터를 불러오는데 실패했습니다: ' + error.message);
     }
 }
 
@@ -299,54 +331,61 @@ function groupAndSumData(data) {
     });
 }
 
-// 재고 데이터 로드
+// 재고 데이터 로드 (Google Sheets API)
 async function loadStockData() {
     try {
         // 먼저 제품코드 마스터 데이터 로드
         await loadProductCodes();
 
-        const response = await fetch('data/DB_realstock.csv');
-        const text = await response.text();
-        stockData = parseCSV(text);
+        // Google Sheets에서 재고 데이터 가져오기
+        const url = `${API_URL}?action=getStock&token=${API_TOKEN}`;
+        const response = await fetch(url);
+        const result = await response.json();
 
-        // 재고량을 숫자로 변환하고 한국어 제품명 매칭
-        const rawData = stockData.map(item => {
-            const productCode = item['제품코드'];
-            const productInfo = productCodeMap[productCode];
+        if (result.status === 'success' && result.data) {
+            stockData = result.data;
 
-            // 제품 정보가 없으면 기타로 설정
-            const koreanName = productInfo ? productInfo.name : '기타';
-            const region = productInfo ? productInfo.region : '기타';
-            const category = productInfo ? productInfo.category : '기타';
-            const subCategory = productInfo ? productInfo.subCategory : '기타';
+            // 재고량을 숫자로 변환하고 한국어 제품명 매칭
+            const rawData = stockData.map(item => {
+                const productCode = item['제품코드'];
+                const productInfo = productCodeMap[productCode];
 
-            // 보관창고: LProduct만 표시, 나머지는 기타
-            const warehouse = item['보관창고'] === 'LProduct' ? 'LProduct' : '기타';
+                // 제품 정보가 없으면 기타로 설정
+                const koreanName = productInfo ? productInfo.name : '기타';
+                const region = productInfo ? productInfo.region : '기타';
+                const category = productInfo ? productInfo.category : '기타';
+                const subCategory = productInfo ? productInfo.subCategory : '기타';
 
-            return {
-                ...item,
-                '제품코드': productCode,
-                '제품명(한국어)': koreanName,
-                '지역분류': region,
-                '대분류': category,
-                '중분류': subCategory,
-                '보관창고': warehouse,
-                stockNum: parseFloat(item['재고']) || 0,
-                shelfLifeNum: parseFloat(item['유통기한(%)']) || 0
-            };
-        });
+                // 보관창고: LProduct만 표시, 나머지는 기타
+                const warehouse = item['보관창고'] === 'LProduct' ? 'LProduct' : '기타';
 
-        // 제품코드별로 그룹화하고 유통기한 구간별로 합산
-        stockData = groupAndSumData(rawData);
+                return {
+                    ...item,
+                    '제품코드': productCode,
+                    '제품명(한국어)': koreanName,
+                    '지역분류': region,
+                    '대분류': category,
+                    '중분류': subCategory,
+                    '보관창고': warehouse,
+                    stockNum: parseFloat(item['재고']) || 0,
+                    shelfLifeNum: parseFloat(item['유통기한(%)']) || 0
+                };
+            });
 
-        // 재고량이 0인 항목 제외
-        stockData = stockData.filter(item => item.stockNum > 0);
+            // 제품코드별로 그룹화하고 유통기한 구간별로 합산
+            stockData = groupAndSumData(rawData);
 
-        // 초기 로드 시 필터 적용 (기본값: LProduct)
-        applyFilters();
+            // 재고량이 0인 항목 제외
+            stockData = stockData.filter(item => item.stockNum > 0);
+
+            // 초기 로드 시 필터 적용 (기본값: LProduct)
+            applyFilters();
+        } else {
+            throw new Error(result.message || '재고 데이터 로드 실패');
+        }
     } catch (error) {
         console.error('데이터 로드 실패:', error);
-        alert('데이터를 불러오는데 실패했습니다.');
+        alert('데이터를 불러오는데 실패했습니다: ' + error.message);
     }
 }
 
