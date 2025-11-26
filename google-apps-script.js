@@ -1,32 +1,30 @@
 // ============================================
 // 롯데제과 러시아법인 재고 관리 시스템 - Google Apps Script
 // ============================================
-// 이 코드를 "LRKF stock management system" 스프레드시트의 Apps Script 편집기에 붙여넣으세요
+// 이 코드를 Google Apps Script 편집기에 붙여넣으세요
 // 배포: Apps Script 편집기 > 배포 > 새 배포 > 유형: 웹앱 > 액세스 권한: 모든 사용자
 
-// ⚠️ 중요: Admin 스프레드시트 ID를 여기에 입력하세요
-const ADMIN_SPREADSHEET_ID = 'YOUR_ADMIN_SPREADSHEET_ID_HERE'; // LRKF stock management system admin의 스프레드시트 ID
-
-/**
- * 스프레드시트를 열 때 자동으로 실행되는 함수
- */
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('📦 재고관리')
-    .addItem('📊 재고 통계 보기', 'showStockStats')
-    .addItem('🔄 데이터 새로고침', 'refreshData')
-    .addToUi();
-}
+// ⚠️ 중요: 각 스프레드시트/폴더 ID를 여기에 입력하세요
+const STOCK_DB_FOLDER_ID = 'YOUR_STOCK_DB_FOLDER_ID_HERE'; // Google Drive의 "Stock DB" 폴더 ID
+const PRODUCT_REF_SPREADSHEET_ID = 'YOUR_PRODUCT_REF_SPREADSHEET_ID_HERE'; // "LRKF stock management system_product ref" 스프레드시트 ID
+const ADMIN_SPREADSHEET_ID = 'YOUR_ADMIN_SPREADSHEET_ID_HERE'; // "LRKF stock management system_admin" 스프레드시트 ID
 
 /**
  * GET 요청 처리 함수
- * 웹 앱에서 데이터를 불러올 때 호출됩니다
  */
 function doGet(e) {
   try {
     const action = e.parameter.action;
 
-    // 인증 체크
+    // 사용자 인증 (로그인) - 토큰 검증 불필요
+    if (action === 'login') {
+      const username = e.parameter.username;
+      const password = e.parameter.password;
+      const result = authenticateUser(username, password);
+      return createResponse(result.success ? 'success' : 'error', result.message, result.user);
+    }
+
+    // 인증 체크 (로그인 외 모든 요청)
     const authToken = e.parameter.token;
     if (!isValidToken(authToken)) {
       return createResponse('error', '인증 실패', null);
@@ -38,20 +36,12 @@ function doGet(e) {
       return createResponse('success', '제품코드 데이터 로드 성공', data);
     }
 
-    // 재고 현황 데이터 가져오기
+    // 재고 현황 데이터 가져오기 (Google Drive의 최신 YYYYMMDD.xlsx 파일에서)
     if (action === 'getStock') {
-      const data = getStockData();
+      const data = getStockDataFromDrive();
       return createResponse('success', '재고 데이터 로드 성공', data);
     }
 
-    // 사용자 인증 (로그인)
-    if (action === 'login') {
-      const username = e.parameter.username;
-      const password = e.parameter.password;
-      const result = authenticateUser(username, password);
-      return createResponse(result.success ? 'success' : 'error', result.message, result.user);
-    }
-
     return createResponse('error', '알 수 없는 요청', null);
 
   } catch (error) {
@@ -61,103 +51,243 @@ function doGet(e) {
 }
 
 /**
- * POST 요청 처리 함수
- * 재고 데이터 업데이트 시 호출됩니다
+ * Google Drive의 Stock DB 폴더에서 최신 YYYYMMDD.xlsx 파일 찾기
  */
-function doPost(e) {
+function getLatestStockFile() {
   try {
-    const data = JSON.parse(e.postData.contents);
+    const folder = DriveApp.getFolderById(STOCK_DB_FOLDER_ID);
+    const files = folder.getFilesByType(MimeType.MICROSOFT_EXCEL);
 
-    // 인증 체크
-    if (!isValidToken(data.token)) {
-      return createResponse('error', '인증 실패', null);
+    let latestFile = null;
+    let latestDate = 0;
+
+    // YYYYMMDD.xlsx 형식의 파일 중 가장 최신 파일 찾기
+    while (files.hasNext()) {
+      const file = files.next();
+      const fileName = file.getName();
+
+      // 파일명이 YYYYMMDD.xlsx 형식인지 확인
+      const match = fileName.match(/^(\d{8})\.xlsx$/);
+      if (match) {
+        const dateNum = parseInt(match[1]);
+        if (dateNum > latestDate) {
+          latestDate = dateNum;
+          latestFile = file;
+        }
+      }
     }
 
-    // 재고 업데이트
-    if (data.action === 'updateStock') {
-      updateStockData(data.stockData);
-      return createResponse('success', '재고 데이터가 업데이트되었습니다', null);
+    if (!latestFile) {
+      throw new Error('Stock DB 폴더에 YYYYMMDD.xlsx 형식의 파일이 없습니다.');
     }
 
-    return createResponse('error', '알 수 없는 요청', null);
-
+    return latestFile;
   } catch (error) {
-    Logger.log('오류 발생: ' + error.toString());
-    return createResponse('error', error.toString(), null);
+    Logger.log('파일 찾기 오류: ' + error.toString());
+    throw new Error('Stock DB 폴더 접근 실패: ' + error.toString());
   }
 }
 
 /**
- * 제품코드 마스터 데이터 가져오기
+ * Google Drive의 최신 재고 파일에서 데이터 가져오기
+ */
+function getStockDataFromDrive() {
+  try {
+    // 최신 파일 찾기
+    const file = getLatestStockFile();
+    Logger.log('최신 파일: ' + file.getName());
+
+    // Excel 파일을 임시 스프레드시트로 변환
+    const blob = file.getBlob();
+    const tempFile = Drive.Files.insert({
+      title: 'temp_' + new Date().getTime(),
+      mimeType: MimeType.GOOGLE_SHEETS
+    }, blob, {
+      convert: true
+    });
+
+    // 임시 스프레드시트 열기
+    const spreadsheet = SpreadsheetApp.openById(tempFile.id);
+    const sheet = spreadsheet.getSheetByName('DB');
+
+    if (!sheet) {
+      throw new Error('DB 시트를 찾을 수 없습니다.');
+    }
+
+    // 데이터 읽기
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    // 컬럼 인덱스 찾기
+    const colIndexes = {
+      code: headers.indexOf('Код номенклатуры'),
+      fullName: headers.indexOf('Наименование номенклатуры'),
+      shortName: headers.indexOf('Краткое наименование'),
+      warehouse: headers.indexOf('Склад'),
+      batchNumber: headers.indexOf('Номер партии'),
+      location: headers.indexOf('Местоположение'),
+      stock: headers.indexOf('Физ. доступно'),
+      shelfLife: headers.indexOf('% годности'),
+      category: headers.indexOf('Наименование строки'),
+      productLine: headers.indexOf('Продукция линии')
+    };
+
+    // Product ref 데이터 가져오기 (제품코드별 추가 정보)
+    const productRefData = getProductRefMap();
+
+    // 데이터 변환
+    const result = [];
+    const groupedData = {}; // 제품코드 + 유통기한 구간별 그룹화
+
+    rows.forEach(row => {
+      if (!row[colIndexes.code]) return; // 빈 행 제외
+
+      const code = row[colIndexes.code].toString();
+      const stock = parseFloat(row[colIndexes.stock]) || 0;
+      const shelfLifePercent = parseFloat(row[colIndexes.shelfLife]) || 0;
+      const batchNumber = row[colIndexes.batchNumber] ? row[colIndexes.batchNumber].toString() : '';
+
+      // 유통기한 변환 (DDMMYYYY → YYYY-MM-DD)
+      const productionDate = convertBatchNumberToDate(batchNumber);
+
+      // 유통기한 구간 계산
+      const shelfLifeRange = getShelfLifeRange(shelfLifePercent);
+
+      // 그룹화 키: 제품코드 + 유통기한 구간
+      const groupKey = `${code}_${shelfLifeRange}`;
+
+      if (!groupedData[groupKey]) {
+        // Product ref에서 추가 정보 가져오기
+        const refInfo = productRefData[code] || {};
+
+        groupedData[groupKey] = {
+          '제품코드': code,
+          '제품명': row[colIndexes.shortName] || row[colIndexes.fullName] || '',
+          '대분류': row[colIndexes.category] || refInfo['대분류'] || '',
+          '중분류': row[colIndexes.productLine] || refInfo['중분류'] || '',
+          '유통기한': productionDate,
+          '보관상태': row[colIndexes.location] || '',
+          '보관창고': row[colIndexes.warehouse] || '',
+          '재고': 0,
+          '유통기한구간': shelfLifeRange,
+          '지역': refInfo['지역'] || '',
+          '맛': refInfo['맛'] || '',
+          '패키지': refInfo['패키지'] || ''
+        };
+      }
+
+      // 재고 합산
+      groupedData[groupKey]['재고'] += stock;
+    });
+
+    // 배열로 변환
+    Object.values(groupedData).forEach(item => {
+      result.push(item);
+    });
+
+    // 임시 파일 삭제
+    DriveApp.getFileById(tempFile.id).setTrashed(true);
+
+    Logger.log(`데이터 변환 완료: ${result.length}개 항목`);
+    return result;
+
+  } catch (error) {
+    Logger.log('재고 데이터 로드 오류: ' + error.toString());
+    throw new Error('재고 데이터 로드 실패: ' + error.toString());
+  }
+}
+
+/**
+ * 배치번호를 날짜로 변환 (DDMMYYYY → YYYY-MM-DD)
+ */
+function convertBatchNumberToDate(batchNumber) {
+  if (!batchNumber || batchNumber.length !== 8) {
+    return '';
+  }
+
+  try {
+    const day = batchNumber.substring(0, 2);
+    const month = batchNumber.substring(2, 4);
+    const year = batchNumber.substring(4, 8);
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    return '';
+  }
+}
+
+/**
+ * 유통기한 퍼센트를 구간으로 변환
+ */
+function getShelfLifeRange(percent) {
+  if (percent >= 80) return '80% 이상';
+  if (percent >= 60) return '60~80%';
+  if (percent >= 40) return '40~60%';
+  if (percent >= 20) return '20~40%';
+  return '20% 미만';
+}
+
+/**
+ * Product ref 데이터를 Map 형태로 가져오기
+ */
+function getProductRefMap() {
+  try {
+    const sheet = SpreadsheetApp.openById(PRODUCT_REF_SPREADSHEET_ID).getSheetByName('product ref');
+    if (!sheet) {
+      Logger.log('product ref 시트를 찾을 수 없습니다.');
+      return {};
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    const productMap = {};
+
+    rows.forEach(row => {
+      const obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = row[index];
+      });
+
+      // 제품코드를 키로 사용
+      const code = obj['제품코드'];
+      if (code) {
+        productMap[code.toString()] = obj;
+      }
+    });
+
+    return productMap;
+  } catch (error) {
+    Logger.log('Product ref 데이터 로드 오류: ' + error.toString());
+    return {};
+  }
+}
+
+/**
+ * 제품코드 마스터 데이터 가져오기 (호환성 유지)
  */
 function getProductCodesData() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('제품코드마스터');
-  const data = sheet.getDataRange().getValues();
-
-  // 헤더를 제외한 데이터 반환
-  const headers = data[0];
-  const rows = data.slice(1);
-
-  return rows.map(row => {
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = row[index];
-    });
-    return obj;
-  });
-}
-
-/**
- * 재고 현황 데이터 가져오기
- */
-function getStockData() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('재고현황');
-  const data = sheet.getDataRange().getValues();
-
-  // 헤더를 제외한 데이터 반환
-  const headers = data[0];
-  const rows = data.slice(1);
-
-  return rows.map(row => {
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = row[index];
-    });
-    return obj;
-  });
-}
-
-/**
- * 재고 데이터 업데이트
- */
-function updateStockData(stockData) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('재고현황');
-
-  // 기존 데이터 삭제 (헤더 제외)
-  if (sheet.getLastRow() > 1) {
-    sheet.deleteRows(2, sheet.getLastRow() - 1);
-  }
-
-  // 새 데이터 추가
-  if (stockData && stockData.length > 0) {
-    const headers = Object.keys(stockData[0]);
-    const rows = stockData.map(item => headers.map(header => item[header]));
-
-    if (rows.length > 0) {
-      sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
-    }
-  }
-}
-
-/**
- * Admin 스프레드시트 가져오기
- */
-function getAdminSpreadsheet() {
   try {
-    return SpreadsheetApp.openById(ADMIN_SPREADSHEET_ID);
+    const sheet = SpreadsheetApp.openById(PRODUCT_REF_SPREADSHEET_ID).getSheetByName('product ref');
+    if (!sheet) {
+      return [];
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    return rows.map(row => {
+      const obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = row[index];
+      });
+      return obj;
+    });
   } catch (error) {
-    Logger.log('Admin 스프레드시트 접근 실패: ' + error.toString());
-    throw new Error('Admin 스프레드시트에 접근할 수 없습니다. ID를 확인하세요.');
+    Logger.log('제품코드 데이터 로드 오류: ' + error.toString());
+    return [];
   }
 }
 
@@ -166,7 +296,11 @@ function getAdminSpreadsheet() {
  */
 function authenticateUser(username, password) {
   try {
-    const adminSheet = getAdminSpreadsheet().getSheetByName('설정');
+    const adminSheet = SpreadsheetApp.openById(ADMIN_SPREADSHEET_ID).getSheetByName('admin');
+    if (!adminSheet) {
+      throw new Error('admin 시트를 찾을 수 없습니다.');
+    }
+
     const data = adminSheet.getDataRange().getValues();
 
     // 사용자 정보 찾기
@@ -204,11 +338,9 @@ function authenticateUser(username, password) {
 }
 
 /**
- * 토큰 검증 (간단한 버전)
+ * 토큰 검증
  */
 function isValidToken(token) {
-  // 실제 환경에서는 더 강력한 토큰 검증 필요
-  // 현재는 기본 토큰만 확인
   const validToken = getValidToken();
   return token === validToken;
 }
@@ -218,7 +350,11 @@ function isValidToken(token) {
  */
 function getValidToken() {
   try {
-    const adminSheet = getAdminSpreadsheet().getSheetByName('설정');
+    const adminSheet = SpreadsheetApp.openById(ADMIN_SPREADSHEET_ID).getSheetByName('admin');
+    if (!adminSheet) {
+      return 'lotte-stock-2024'; // 기본 토큰
+    }
+
     const data = adminSheet.getDataRange().getValues();
 
     // API_TOKEN 찾기
@@ -251,48 +387,66 @@ function createResponse(status, message, data) {
 }
 
 /**
- * 재고 통계 보기
+ * 재고 통계 보기 (수동 실행용)
  */
 function showStockStats() {
-  const stockData = getStockData();
+  try {
+    const stockData = getStockDataFromDrive();
 
-  let totalStock = 0;
-  const productCounts = {};
+    let totalStock = 0;
+    const productCounts = {};
 
-  stockData.forEach(item => {
-    const stock = parseFloat(item['재고']) || 0;
-    totalStock += stock;
+    stockData.forEach(item => {
+      const stock = parseFloat(item['재고']) || 0;
+      totalStock += stock;
 
-    const category = item['대분류'] || '기타';
-    productCounts[category] = (productCounts[category] || 0) + 1;
-  });
+      const category = item['대분류'] || '기타';
+      productCounts[category] = (productCounts[category] || 0) + 1;
+    });
 
-  let message = `📊 재고 통계\n\n`;
-  message += `전체 재고량: ${totalStock.toFixed(0)} 박스\n`;
-  message += `제품 종류: ${stockData.length} SKU\n\n`;
-  message += `카테고리별 제품 수:\n`;
+    let message = `📊 재고 통계\n\n`;
+    message += `전체 재고량: ${totalStock.toFixed(0)} 박스\n`;
+    message += `제품 종류: ${stockData.length} SKU\n\n`;
+    message += `카테고리별 제품 수:\n`;
 
-  Object.entries(productCounts).forEach(([category, count]) => {
-    message += `  • ${category}: ${count}개\n`;
-  });
+    Object.entries(productCounts).forEach(([category, count]) => {
+      message += `  • ${category}: ${count}개\n`;
+    });
 
-  const ui = SpreadsheetApp.getUi();
-  ui.alert('재고 통계', message, ui.ButtonSet.OK);
+    Logger.log(message);
+    return message;
+  } catch (error) {
+    Logger.log('통계 생성 오류: ' + error.toString());
+    return '통계 생성 실패: ' + error.toString();
+  }
 }
 
 /**
- * 데이터 새로고침
+ * 테스트 함수 - 최신 파일 확인
  */
-function refreshData() {
-  const ui = SpreadsheetApp.getUi();
-  const result = ui.alert(
-    '데이터 새로고침',
-    '데이터를 새로고침하시겠습니까?',
-    ui.ButtonSet.YES_NO
-  );
+function testGetLatestFile() {
+  try {
+    const file = getLatestStockFile();
+    Logger.log('최신 파일명: ' + file.getName());
+    Logger.log('파일 ID: ' + file.getId());
+    Logger.log('생성일: ' + file.getDateCreated());
+    Logger.log('수정일: ' + file.getLastUpdated());
+  } catch (error) {
+    Logger.log('테스트 실패: ' + error.toString());
+  }
+}
 
-  if (result === ui.Button.YES) {
-    SpreadsheetApp.flush();
-    ui.alert('완료', '데이터가 새로고침되었습니다.', ui.ButtonSet.OK);
+/**
+ * 테스트 함수 - 재고 데이터 로드
+ */
+function testGetStockData() {
+  try {
+    const data = getStockDataFromDrive();
+    Logger.log('데이터 개수: ' + data.length);
+    if (data.length > 0) {
+      Logger.log('첫 번째 항목: ' + JSON.stringify(data[0]));
+    }
+  } catch (error) {
+    Logger.log('테스트 실패: ' + error.toString());
   }
 }
