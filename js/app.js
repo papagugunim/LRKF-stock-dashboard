@@ -1,3 +1,106 @@
+// ============================================
+// 로그인 관리
+// ============================================
+
+// 사용자 계정 정보 (실제 환경에서는 서버에서 관리해야 함)
+const USERS = {
+    'admin': {
+        password: 'lotte2024', // 실제 환경에서는 해시화 필요
+        name: '관리자'
+    },
+    'moscow': {
+        password: 'moscow123',
+        name: '모스크바지사'
+    }
+};
+
+// 로그인 체크
+function checkAuth() {
+    const currentUser = localStorage.getItem('currentUser');
+    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+
+    if (currentUser && rememberMe) {
+        showDashboard(currentUser);
+        return true;
+    } else if (currentUser) {
+        // 세션 기반 로그인 (페이지 새로고침 시 로그아웃)
+        sessionStorage.setItem('sessionUser', currentUser);
+        showDashboard(currentUser);
+        return true;
+    }
+
+    const sessionUser = sessionStorage.getItem('sessionUser');
+    if (sessionUser) {
+        showDashboard(sessionUser);
+        return true;
+    }
+
+    return false;
+}
+
+// 로그인 처리
+function handleLogin(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const rememberMe = document.getElementById('rememberMe').checked;
+    const errorElement = document.getElementById('loginError');
+
+    // 사용자 인증
+    if (USERS[username] && USERS[username].password === password) {
+        // 로그인 성공
+        if (rememberMe) {
+            localStorage.setItem('currentUser', username);
+            localStorage.setItem('rememberMe', 'true');
+        } else {
+            sessionStorage.setItem('sessionUser', username);
+        }
+
+        showDashboard(username);
+    } else {
+        // 로그인 실패
+        errorElement.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+        errorElement.style.display = 'block';
+
+        // 3초 후 에러 메시지 숨김
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// 대시보드 표시
+function showDashboard(username) {
+    const userInfo = USERS[username];
+
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainDashboard').style.display = 'block';
+    document.getElementById('currentUser').textContent = userInfo ? userInfo.name : username;
+
+    // 데이터 로드 (최초 1회만)
+    if (stockData.length === 0) {
+        loadStockData();
+    }
+}
+
+// 로그아웃 처리
+function handleLogout() {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('rememberMe');
+    sessionStorage.removeItem('sessionUser');
+
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainDashboard').style.display = 'none';
+
+    // 폼 초기화
+    document.getElementById('loginForm').reset();
+}
+
+// ============================================
+// 재고 관리 (기존 코드)
+// ============================================
+
 // 전역 변수
 let stockData = [];
 let filteredData = [];
@@ -459,11 +562,22 @@ function sortTable(column) {
 
 // 이벤트 리스너 등록
 document.addEventListener('DOMContentLoaded', () => {
+    // 로그인 상태 체크
+    const isLoggedIn = checkAuth();
+
+    // 로그인 폼 이벤트
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+    // 로그아웃 버튼 이벤트
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+    // 로그인되지 않은 경우 여기서 종료
+    if (!isLoggedIn) {
+        return;
+    }
+
     // 최종 업데이트 시각 표시
     updateLastUpdateTime();
-
-    // 데이터 로드
-    loadStockData();
 
     // 필터 이벤트
     document.getElementById('warehouseFilter').addEventListener('change', applyFilters);
