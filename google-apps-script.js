@@ -98,11 +98,12 @@ function getStockDataFromDrive() {
     Logger.log('최신 파일: ' + file.getName());
 
     // Excel 파일을 임시 스프레드시트로 변환
-    const blob = file.getBlob();
-    const tempFile = Drive.Files.insert({
-      title: 'temp_' + new Date().getTime(),
+    const resource = {
+      title: 'temp_stock_' + new Date().getTime(),
       mimeType: MimeType.GOOGLE_SHEETS
-    }, blob, {
+    };
+
+    const tempFile = Drive.Files.copy(resource, file.getId(), {
       convert: true
     });
 
