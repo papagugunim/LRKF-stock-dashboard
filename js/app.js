@@ -123,6 +123,43 @@ function handleLogout() {
 }
 
 // ============================================
+// 다크모드 관리
+// ============================================
+
+// 다크모드 초기화
+function initDarkMode() {
+    const savedTheme = localStorage.getItem('theme');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
+    if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        if (darkModeToggle) {
+            darkModeToggle.textContent = '☀️';
+        }
+    }
+}
+
+// 다크모드 토글
+function toggleDarkMode() {
+    const currentTheme = document.body.getAttribute('data-theme');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
+    if (currentTheme === 'dark') {
+        document.body.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        if (darkModeToggle) {
+            darkModeToggle.textContent = '🌙';
+        }
+    } else {
+        document.body.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        if (darkModeToggle) {
+            darkModeToggle.textContent = '☀️';
+        }
+    }
+}
+
+// ============================================
 // 재고 관리 (기존 코드)
 // ============================================
 
@@ -586,6 +623,9 @@ function sortTable(column) {
 
 // 이벤트 리스너 등록
 document.addEventListener('DOMContentLoaded', () => {
+    // 다크모드 초기화 (로그인 전에도 적용)
+    initDarkMode();
+
     // 로그인 상태 체크
     const isLoggedIn = checkAuth();
 
@@ -594,6 +634,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 로그아웃 버튼 이벤트
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+    // 다크모드 토글 버튼 이벤트
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
 
     // 로그인되지 않은 경우 여기서 종료
     if (!isLoggedIn) {
