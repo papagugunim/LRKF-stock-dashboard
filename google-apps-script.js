@@ -164,17 +164,17 @@ function getStockDataFromDrive() {
 
         groupedData[groupKey] = {
           '제품코드': code,
-          '제품명': row[colIndexes.shortName] || row[colIndexes.fullName] || '',
-          '대분류': row[colIndexes.category] || refInfo['대분류'] || '',
-          '중분류': row[colIndexes.productLine] || refInfo['중분류'] || '',
+          '제품명': refInfo['제품명(한국어)'] || refInfo['제품명'] || row[colIndexes.shortName] || row[colIndexes.fullName] || '',
+          '대분류': row[colIndexes.category] || refInfo['구분(맛)'] || refInfo['대분류'] || '',
+          '중분류': row[colIndexes.productLine] || refInfo['구분(패키지)'] || refInfo['중분류'] || '',
           '유통기한': productionDate,
           '보관상태': row[colIndexes.location] || '',
           '보관창고': row[colIndexes.warehouse] || '',
           '재고': 0,
           '유통기한구간': shelfLifeRange,
-          '지역': refInfo['지역'] || '',
-          '맛': refInfo['맛'] || '',
-          '패키지': refInfo['패키지'] || ''
+          '지역': refInfo['지역분류'] || refInfo['지역'] || '',
+          '맛': refInfo['구분(맛)'] || refInfo['맛'] || '',
+          '패키지': refInfo['구분(패키지)'] || refInfo['패키지'] || ''
         };
       }
 
