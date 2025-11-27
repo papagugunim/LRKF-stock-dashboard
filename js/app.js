@@ -496,10 +496,10 @@ function renderTable() {
     tableBody.innerHTML = pageData.map(item => `
         <tr>
             <td>${item['제품코드']}</td>
-            <td>${item['제품명']}</td>
-            <td>${item['대분류']}</td>
-            <td>${item['중분류']}</td>
-            <td>${item['생산일자']}</td>
+            <td>${item['대분류'] || '-'}</td>
+            <td>${item['지역'] || '-'}</td>
+            <td>${item['맛'] || '-'}</td>
+            <td>${item['패키지'] || '-'}</td>
             <td>${getStatusBadge(item['보관상태'])}</td>
             <td><span class="stock-number">${formatNumber(Math.round(item.stockNum))}</span></td>
             <td>${item['유통기한구간']}</td>
@@ -589,11 +589,10 @@ function sortTable(column) {
 
     const columnMap = {
         'code': '제품코드',
-        'name': '제품명',
-        'category': '대분류',
-        'product': '중분류',
-        'warehouse': '보관창고',
-        'productionDate': '생산일자',
+        'categoryMain': '대분류',
+        'region': '지역',
+        'taste': '맛',
+        'package': '패키지',
         'status': '보관상태',
         'stock': 'stockNum',
         'shelfLife': '유통기한구간'
