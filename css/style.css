@@ -520,12 +520,13 @@ td {
 
 /* 다크모드 토글 버튼 */
 .dark-mode-toggle {
-    padding: 8px 12px;
+    padding: 8px 16px;
     background: #4a6278;
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -535,6 +536,30 @@ td {
 
 .dark-mode-toggle:hover {
     background: #5f7d95;
+    transform: translateY(-2px);
+}
+
+/* 로그인 페이지 다크모드 토글 버튼 */
+.dark-mode-toggle-login {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.dark-mode-toggle-login:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-2px);
 }
 
@@ -669,6 +694,55 @@ body[data-theme="dark"] .dark-mode-toggle {
 
 body[data-theme="dark"] .dark-mode-toggle:hover {
     background: #4a6278;
+}
+
+/* 로그인 페이지 다크모드 */
+body[data-theme="dark"]:has(#loginPage:not([style*="display: none"])) {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+}
+
+body[data-theme="dark"] .dark-mode-toggle-login {
+    background: rgba(95, 125, 149, 0.3);
+    border-color: rgba(95, 125, 149, 0.5);
+}
+
+body[data-theme="dark"] .dark-mode-toggle-login:hover {
+    background: rgba(95, 125, 149, 0.5);
+    border-color: rgba(95, 125, 149, 0.7);
+}
+
+body[data-theme="dark"] .login-box {
+    background: #2d2d2d;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+body[data-theme="dark"] .login-header h1 {
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .login-header p {
+    color: #b0b0b0;
+}
+
+body[data-theme="dark"] .login-form label {
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .login-form input[type="text"],
+body[data-theme="dark"] .login-form input[type="password"] {
+    background: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .login-form input[type="text"]:focus,
+body[data-theme="dark"] .login-form input[type="password"]:focus {
+    border-color: #5f7d95;
+    box-shadow: 0 0 0 3px rgba(95, 125, 149, 0.2);
+}
+
+body[data-theme="dark"] .remember-me span {
+    color: #b0b0b0;
 }
 
 @media (max-width: 768px) {

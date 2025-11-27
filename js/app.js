@@ -130,11 +130,15 @@ function handleLogout() {
 function initDarkMode() {
     const savedTheme = localStorage.getItem('theme');
     const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeToggleLogin = document.getElementById('darkModeToggleLogin');
 
     if (savedTheme === 'dark') {
         document.body.setAttribute('data-theme', 'dark');
         if (darkModeToggle) {
-            darkModeToggle.textContent = '☀️';
+            darkModeToggle.textContent = '라이트모드';
+        }
+        if (darkModeToggleLogin) {
+            darkModeToggleLogin.textContent = '라이트모드';
         }
     }
 }
@@ -143,18 +147,25 @@ function initDarkMode() {
 function toggleDarkMode() {
     const currentTheme = document.body.getAttribute('data-theme');
     const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeToggleLogin = document.getElementById('darkModeToggleLogin');
 
     if (currentTheme === 'dark') {
         document.body.removeAttribute('data-theme');
         localStorage.setItem('theme', 'light');
         if (darkModeToggle) {
-            darkModeToggle.textContent = '🌙';
+            darkModeToggle.textContent = '다크모드';
+        }
+        if (darkModeToggleLogin) {
+            darkModeToggleLogin.textContent = '다크모드';
         }
     } else {
         document.body.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
         if (darkModeToggle) {
-            darkModeToggle.textContent = '☀️';
+            darkModeToggle.textContent = '라이트모드';
+        }
+        if (darkModeToggleLogin) {
+            darkModeToggleLogin.textContent = '라이트모드';
         }
     }
 }
@@ -635,10 +646,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 로그아웃 버튼 이벤트
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
-    // 다크모드 토글 버튼 이벤트
+    // 다크모드 토글 버튼 이벤트 (메인 대시보드)
     const darkModeToggle = document.getElementById('darkModeToggle');
     if (darkModeToggle) {
         darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+
+    // 다크모드 토글 버튼 이벤트 (로그인 페이지)
+    const darkModeToggleLogin = document.getElementById('darkModeToggleLogin');
+    if (darkModeToggleLogin) {
+        darkModeToggleLogin.addEventListener('click', toggleDarkMode);
     }
 
     // 로그인되지 않은 경우 여기서 종료
