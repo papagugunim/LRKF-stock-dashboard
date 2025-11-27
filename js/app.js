@@ -183,40 +183,40 @@ function updateLastUpdateTime() {
 }
 
 // 제품코드 마스터 데이터 로드 (Google Sheets API)
+// 참고: Product ref 스프레드시트는 선택사항입니다.
+// Excel 데이터에 이미 모든 정보가 있으므로 없어도 작동합니다.
 async function loadProductCodes() {
     try {
         const url = `${API_URL}?action=getProductCodes&token=${API_TOKEN}`;
         const response = await fetch(url);
         const result = await response.json();
 
-        if (result.status === 'success' && result.data) {
+        if (result.status === 'success' && result.data && result.data.length > 0) {
             const products = result.data;
 
-            // 제품코드를 키로 하는 맵 생성 (제품명, 지역분류, 대분류, 중분류 포함)
+            // Product ref 스프레드시트의 실제 컬럼 이름에 맞춤
             products.forEach(product => {
                 const code = product['제품코드'];
-                const koreanName = product['제품명(한국어)'];
-                const region = product['지역분류'] || '기타'; // 지역분류
-                const category = product['구분(맛)'] || '기타'; // 대분류
-                const subCategory = product['구분(패키지)'] || '기타'; // 중분류
+                const region = product['지역'] || '';
+                const taste = product['맛'] || '';
+                const packageType = product['패키지'] || '';
 
-                if (code && koreanName) {
+                if (code) {
                     productCodeMap[code] = {
-                        name: koreanName,
                         region: region,
-                        category: category,
-                        subCategory: subCategory
+                        taste: taste,
+                        packageType: packageType
                     };
                 }
             });
 
             console.log('제품코드 매핑 완료:', Object.keys(productCodeMap).length, '개');
         } else {
-            throw new Error(result.message || '제품코드 데이터 로드 실패');
+            console.log('Product ref 데이터 없음 - Excel 데이터만 사용');
         }
     } catch (error) {
-        console.error('제품코드 로드 실패:', error);
-        alert('제품코드 데이터를 불러오는데 실패했습니다: ' + error.message);
+        console.warn('제품코드 로드 실패 (선택사항):', error);
+        // Product ref가 없어도 계속 진행 (Excel 데이터만 사용)
     }
 }
 
@@ -334,46 +334,31 @@ function groupAndSumData(data) {
 // 재고 데이터 로드 (Google Sheets API)
 async function loadStockData() {
     try {
-        // 먼저 제품코드 마스터 데이터 로드
-        await loadProductCodes();
-
-        // Google Sheets에서 재고 데이터 가져오기
+        // Google Drive에서 재고 데이터 가져오기
+        // 참고: Product ref 병합은 백엔드(Google Apps Script)에서 이미 처리됨
         const url = `${API_URL}?action=getStock&token=${API_TOKEN}`;
         const response = await fetch(url);
         const result = await response.json();
 
         if (result.status === 'success' && result.data) {
-            stockData = result.data;
+            // 백엔드에서 이미 그룹화되고 Product ref가 병합된 데이터를 받음
+            // 필요한 숫자 필드만 추가 파싱
+            stockData = result.data.map(item => {
+                // 유통기한 구간을 숫자로 변환 (필터링 및 정렬용)
+                const shelfLifeRange = item['유통기한구간'] || '';
+                let shelfLifeNum = 85; // 기본값
 
-            // 재고량을 숫자로 변환하고 한국어 제품명 매칭
-            const rawData = stockData.map(item => {
-                const productCode = item['제품코드'];
-                const productInfo = productCodeMap[productCode];
-
-                // 제품 정보가 없으면 기타로 설정
-                const koreanName = productInfo ? productInfo.name : '기타';
-                const region = productInfo ? productInfo.region : '기타';
-                const category = productInfo ? productInfo.category : '기타';
-                const subCategory = productInfo ? productInfo.subCategory : '기타';
-
-                // 보관창고: LProduct만 표시, 나머지는 기타
-                const warehouse = item['보관창고'] === 'LProduct' ? 'LProduct' : '기타';
+                if (shelfLifeRange.includes('90% 이상')) shelfLifeNum = 95;
+                else if (shelfLifeRange.includes('80~90%')) shelfLifeNum = 85;
+                else if (shelfLifeRange.includes('70~80%')) shelfLifeNum = 75;
+                else if (shelfLifeRange.includes('70% 미만')) shelfLifeNum = 65;
 
                 return {
                     ...item,
-                    '제품코드': productCode,
-                    '제품명(한국어)': koreanName,
-                    '지역분류': region,
-                    '대분류': category,
-                    '중분류': subCategory,
-                    '보관창고': warehouse,
                     stockNum: parseFloat(item['재고']) || 0,
-                    shelfLifeNum: parseFloat(item['유통기한(%)']) || 0
+                    shelfLifeNum: shelfLifeNum
                 };
             });
-
-            // 제품코드별로 그룹화하고 유통기한 구간별로 합산
-            stockData = groupAndSumData(rawData);
 
             // 재고량이 0인 항목 제외
             stockData = stockData.filter(item => item.stockNum > 0);
@@ -463,7 +448,7 @@ function renderTable() {
     tableBody.innerHTML = pageData.map(item => `
         <tr>
             <td>${item['제품코드']}</td>
-            <td>${item['제품명(한국어)']}</td>
+            <td>${item['제품명']}</td>
             <td>${item['대분류']}</td>
             <td>${item['중분류']}</td>
             <td>${item['생산일자']}</td>
@@ -491,27 +476,27 @@ function updatePagination() {
 function customSort(a, b) {
     // 정렬 순서 정의
     const regionOrder = ['내수용', '벨라루스용', '카작용', '소머리'];
-    const categoryOrder = ['오리지날', '카카오', '바나나', '치즈', '딸기', '아망테'];
-    const subCategoryOrder = ['48봉', '16봉', '12봉', '6봉', '4봉'];
+    const tasteOrder = ['오리지날', '카카오', '바나나', '치즈', '딸기', '아망테'];
+    const packageOrder = ['48봉', '16봉', '12봉', '6봉', '4봉'];
 
-    // 1차: 지역분류
-    const regionA = regionOrder.indexOf(a['지역분류']);
-    const regionB = regionOrder.indexOf(b['지역분류']);
+    // 1차: 지역
+    const regionA = regionOrder.indexOf(a['지역']);
+    const regionB = regionOrder.indexOf(b['지역']);
     if (regionA !== regionB) {
         return (regionA === -1 ? 999 : regionA) - (regionB === -1 ? 999 : regionB);
     }
 
-    // 2차: 대분류(맛)
-    const categoryA = categoryOrder.indexOf(a['대분류']);
-    const categoryB = categoryOrder.indexOf(b['대분류']);
-    if (categoryA !== categoryB) {
-        return (categoryA === -1 ? 999 : categoryA) - (categoryB === -1 ? 999 : categoryB);
+    // 2차: 맛
+    const tasteA = tasteOrder.indexOf(a['맛']);
+    const tasteB = tasteOrder.indexOf(b['맛']);
+    if (tasteA !== tasteB) {
+        return (tasteA === -1 ? 999 : tasteA) - (tasteB === -1 ? 999 : tasteB);
     }
 
-    // 3차: 중분류(패키지)
-    const subCategoryA = subCategoryOrder.indexOf(a['중분류']);
-    const subCategoryB = subCategoryOrder.indexOf(b['중분류']);
-    return (subCategoryA === -1 ? 999 : subCategoryA) - (subCategoryB === -1 ? 999 : subCategoryB);
+    // 3차: 패키지
+    const packageA = packageOrder.indexOf(a['패키지']);
+    const packageB = packageOrder.indexOf(b['패키지']);
+    return (packageA === -1 ? 999 : packageA) - (packageB === -1 ? 999 : packageB);
 }
 
 // 필터링
@@ -527,11 +512,11 @@ function applyFilters() {
         if (item.stockNum <= 0) return false;
 
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
-        const matchRegion = regionFilter === 'all' || item['지역분류'] === regionFilter;
-        const matchCategory = categoryFilter === 'all' || item['대분류'] === categoryFilter;
-        const matchProduct = productFilter === 'all' || item['중분류'] === productFilter;
+        const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
+        const matchCategory = categoryFilter === 'all' || item['맛'] === categoryFilter;
+        const matchProduct = productFilter === 'all' || item['패키지'] === productFilter;
         const matchSearch = searchText === '' ||
-                          item['제품명(한국어)'].toLowerCase().includes(searchText) ||
+                          item['제품명'].toLowerCase().includes(searchText) ||
                           item['제품코드'].toLowerCase().includes(searchText);
 
         return matchWarehouse && matchRegion && matchCategory && matchProduct && matchSearch;
@@ -556,7 +541,7 @@ function sortTable(column) {
 
     const columnMap = {
         'code': '제품코드',
-        'name': '제품명(한국어)',
+        'name': '제품명',
         'category': '대분류',
         'product': '중분류',
         'warehouse': '보관창고',
