@@ -600,8 +600,9 @@ function applyFilters() {
 
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
-        const matchCategory = categoryFilter === 'all' || item['맛'] === categoryFilter;
-        const matchProduct = productFilter === 'all' || item['패키지'] === productFilter;
+        const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
+        const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter;
+        const matchPackage = packageFilter === 'all' || item['패키지'] === packageFilter;
         const matchSearch = searchText === '' ||
             item['제품명'].toLowerCase().includes(searchText) ||
             item['제품코드'].toLowerCase().includes(searchText);
