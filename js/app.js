@@ -569,10 +569,31 @@ function updateSummary() {
         warningStock: Math.round(warningStock)
     });
 
-    document.getElementById('totalStock').textContent = formatNumber(Math.round(totalStock));
-    document.getElementById('productCount').textContent = productCount;
-    document.getElementById('avgShelfLife').textContent = filteredData.length > 0 ? avgShelfLife.toFixed(1) : '-';
-    document.getElementById('warningCount').textContent = formatNumber(Math.round(warningStock));
+    // DOM 요소 확인 및 업데이트
+    const totalStockEl = document.getElementById('totalStock');
+    const productCountEl = document.getElementById('productCount');
+    const avgShelfLifeEl = document.getElementById('avgShelfLife');
+    const warningCountEl = document.getElementById('warningCount');
+
+    console.log('DOM 요소 확인:', {
+        totalStockEl: totalStockEl !== null,
+        productCountEl: productCountEl !== null,
+        avgShelfLifeEl: avgShelfLifeEl !== null,
+        warningCountEl: warningCountEl !== null
+    });
+
+    if (totalStockEl) totalStockEl.textContent = formatNumber(Math.round(totalStock));
+    if (productCountEl) productCountEl.textContent = productCount;
+    if (avgShelfLifeEl) {
+        const newValue = filteredData.length > 0 ? avgShelfLife.toFixed(1) : '-';
+        console.log('avgShelfLife 업데이트:', avgShelfLifeEl.textContent, '->', newValue);
+        avgShelfLifeEl.textContent = newValue;
+    }
+    if (warningCountEl) {
+        const newValue = formatNumber(Math.round(warningStock));
+        console.log('warningCount 업데이트:', warningCountEl.textContent, '->', newValue);
+        warningCountEl.textContent = newValue;
+    }
 }
 
 // 재고 상태 배지 생성
