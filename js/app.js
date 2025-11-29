@@ -2,8 +2,8 @@
 // 로그인 관리 & Google Sheets 연동
 // ============================================
 
-// Google Apps Script Web App URL (HEAD = 항상 최신 코드 사용)
-const API_URL = 'https://script.google.com/macros/s/AKfycbz2282EFI55bs3DuIHR0Fn2wG_gKGyb-9BIGlm84Uu3/exec';
+// Google Apps Script Web App URL
+const API_URL = 'https://script.google.com/macros/s/AKfycbwoZ6BVfvKwZg4GnVaPvuGHIS1K5bR_ROhcpHQZJk9hLoae0eSgcr4sBrNm9cxq8bttRA/exec';
 const API_TOKEN = 'lotte-stock-2024'; // Admin 스프레드시트의 API_TOKEN과 일치해야 함
 
 // 로그인 체크
