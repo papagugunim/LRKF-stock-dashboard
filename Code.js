@@ -5,7 +5,7 @@
 // 배포: Apps Script 편집기 > 배포 > 새 배포 > 유형: 웹앱 > 액세스 권한: 모든 사용자
 
 // ⚠️ 중요: 각 스프레드시트/폴더 ID를 여기에 입력하세요
-const STOCK_DB_FOLDER_ID = '1wNmFQVXydCD7Ywxsi6UA2XPtZ5hxNtRS'; // Google Drive의 "Stock DB" 폴더 ID (재고 원본 데이터)
+const STOCK_DB_FOLDER_ID = '1wNmFQVXydCD7Ywxsi6UA2XPtZ5hxNtRS'; // Google Drive의 "Stock DB" 폴더 ID
 const PRODUCT_REF_SPREADSHEET_ID = '1BjLRA823m6ODKcWbgN3UJMQv0CYO77ZmWXmRh1n9CZc'; // "LRKF stock management system_product ref" 스프레드시트 ID
 const ADMIN_SPREADSHEET_ID = '1k2iWG7cZxPxak1bXns4CGCkm2PwS-dLHInd9W4Re-wQ'; // "LRKF stock management system_admin" 스프레드시트 ID
 
@@ -38,8 +38,8 @@ function doGet(e) {
 
     // 재고 현황 데이터 가져오기 (Google Drive의 최신 YYYYMMDD.xlsx 파일에서)
     if (action === 'getStock') {
-      const result = getStockDataFromDrive();
-      return createResponse('success', '재고 데이터 로드 성공', result);
+      const data = getStockDataFromDrive();
+      return createResponse('success', '재고 데이터 로드 성공', data);
     }
 
     return createResponse('error', '알 수 없는 요청', null);
@@ -52,7 +52,7 @@ function doGet(e) {
 
 /**
  * Google Drive의 Stock DB 폴더에서 최신 재고 파일 찾기
- * 지원 형식: YYYYMMDD.xlsx (우선), 재고raw데이터_YYYYMMDD.xlsx, 재고raw데이터 YYYYMMDD.xlsx 등
+ * 지원 형식: 재고raw데이터_YYYYMMDD.xlsx, 재고raw데이터 YYYYMMDD.xlsx, YYYYMMDD.xlsx 등
  */
 function getLatestStockFile() {
   try {
@@ -71,25 +71,25 @@ function getLatestStockFile() {
 
       let dateNum = 0;
 
-      // 패턴 1: YYYYMMDD.xlsx (가장 기본 형식, 우선순위 높음)
-      let match = fileName.match(/^(\d{8})\.xlsx$/);
+      // 패턴 1: 재고raw데이터_YYYYMMDD.xlsx 또는 재고raw데이터 YYYYMMDD.xlsx
+      let match = fileName.match(/재고raw데이터[_\s]*(\d{8})\.xlsx$/i);
       if (match) {
         dateNum = parseInt(match[1]);
       }
 
-      // 패턴 2: 재고raw데이터_YYYYMMDD.xlsx 또는 재고raw데이터 YYYYMMDD.xlsx
-      if (!dateNum) {
-        match = fileName.match(/재고raw데이터[_\s]*(\d{8})\.xlsx$/i);
-        if (match) {
-          dateNum = parseInt(match[1]);
-        }
-      }
-
-      // 패턴 3: 재고raw데이터_YYYY-MM-DD.xlsx 또는 재고raw데이터 YYYY-MM-DD.xlsx
+      // 패턴 2: 재고raw데이터_YYYY-MM-DD.xlsx 또는 재고raw데이터 YYYY-MM-DD.xlsx
       if (!dateNum) {
         match = fileName.match(/재고raw데이터[_\s]*(\d{4})-(\d{2})-(\d{2})\.xlsx$/i);
         if (match) {
           dateNum = parseInt(match[1] + match[2] + match[3]);
+        }
+      }
+
+      // 패턴 3: YYYYMMDD.xlsx (기존 형식)
+      if (!dateNum) {
+        match = fileName.match(/^(\d{8})\.xlsx$/);
+        if (match) {
+          dateNum = parseInt(match[1]);
         }
       }
 
@@ -101,7 +101,7 @@ function getLatestStockFile() {
     }
 
     if (!latestFile) {
-      throw new Error('Stock DB 폴더에 유효한 엑셀 파일이 없습니다. 파일명은 YYYYMMDD.xlsx 형식이어야 합니다.');
+      throw new Error('Stock DB 폴더에 엑셀 파일이 없습니다.');
     }
 
     Logger.log('선택된 최신 파일: ' + latestFile.getName());
@@ -141,13 +141,11 @@ function getStockDataFromDrive() {
 
     // 'DB' 시트 찾기
     let sheet = spreadsheet.getSheetByName('DB');
-    let usedSheetName = 'DB';
 
     // 'DB' 시트가 없으면 첫 번째 시트 사용
-    if (!sheet && sheets.length > 0) {
+    if (!sheet) {
+      Logger.log('DB 시트를 찾을 수 없음. 첫 번째 시트 사용: ' + sheetNames[0]);
       sheet = sheets[0];
-      usedSheetName = sheet.getName();
-      Logger.log('DB 시트를 찾을 수 없음. 첫 번째 시트 사용: ' + usedSheetName);
     }
 
     if (!sheet) {
@@ -248,18 +246,7 @@ function getStockDataFromDrive() {
     DriveApp.getFileById(tempFile.id).setTrashed(true);
 
     Logger.log(`데이터 변환 완료: ${result.length}개 항목`);
-
-    // 파일 날짜 정보 추출하여 함께 반환
-    const fileName = file.getName();
-    const dateMatch = fileName.match(/(\d{8})/);
-    const fileDate = dateMatch ? dateMatch[1] : '';
-
-    return {
-      data: result,
-      fileName: fileName,
-      fileDate: fileDate,
-      sheetName: usedSheetName
-    };
+    return result;
 
   } catch (error) {
     Logger.log('재고 데이터 로드 오류: ' + error.toString());
