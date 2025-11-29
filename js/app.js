@@ -3,7 +3,7 @@
 // ============================================
 
 // Google Apps Script Web App URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbxUHfMkCAaF7SSniIjzozR1H52n8Bdu7CSxcXUFONxNQujtp2Ikc5TlDtVDCAObwK2dtA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxS-UHWdcOmUZhvD14-_rseVS5vd40g3qJ9oRBDISFmE5Wb3n2Qyzvq87F7X88lke18yA/exec';
 const API_TOKEN = 'lotte-stock-2024'; // Admin 스프레드시트의 API_TOKEN과 일치해야 함
 
 // 로그인 체크
@@ -399,9 +399,37 @@ async function loadStockData() {
         const result = await response.json();
 
         if (result.status === 'success' && result.data) {
+            // 백엔드에서 파일 정보와 데이터를 함께 받음
+            const responseData = result.data;
+
+            // 데이터가 객체 형태인 경우 (fileName, fileDate, data 포함)
+            let stockArray = [];
+            let fileInfo = null;
+
+            if (responseData.data && Array.isArray(responseData.data)) {
+                stockArray = responseData.data;
+                fileInfo = {
+                    fileName: responseData.fileName || '',
+                    fileDate: responseData.fileDate || '',
+                    sheetName: responseData.sheetName || 'DB'
+                };
+            } else if (Array.isArray(responseData)) {
+                // 이전 버전 호환성 (배열만 반환하는 경우)
+                stockArray = responseData;
+            }
+
+            // 파일 날짜 정보 표시
+            if (fileInfo && fileInfo.fileDate) {
+                const year = fileInfo.fileDate.substring(0, 4);
+                const month = fileInfo.fileDate.substring(4, 6);
+                const day = fileInfo.fileDate.substring(6, 8);
+                const formattedDate = `${year}-${month}-${day}`;
+                document.getElementById('dataFileName').textContent = `${formattedDate} (${fileInfo.fileName})`;
+            }
+
             // 백엔드에서 이미 그룹화되고 Product ref가 병합된 데이터를 받음
             // 필요한 숫자 필드만 추가 파싱
-            stockData = result.data.map(item => {
+            stockData = stockArray.map(item => {
                 // 유통기한 구간을 숫자로 변환 (필터링 및 정렬용)
                 const shelfLifeRange = item['유통기한구간'] || '';
                 let shelfLifeNum = 85; // 기본값
@@ -575,8 +603,8 @@ function applyFilters() {
         const matchCategory = categoryFilter === 'all' || item['맛'] === categoryFilter;
         const matchProduct = productFilter === 'all' || item['패키지'] === productFilter;
         const matchSearch = searchText === '' ||
-                          item['제품명'].toLowerCase().includes(searchText) ||
-                          item['제품코드'].toLowerCase().includes(searchText);
+            item['제품명'].toLowerCase().includes(searchText) ||
+            item['제품코드'].toLowerCase().includes(searchText);
 
         return matchWarehouse && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
     });
