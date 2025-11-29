@@ -9,6 +9,7 @@
 <body>
     <!-- 로그인 페이지 -->
     <div id="loginPage" class="login-container">
+        <button id="darkModeToggleLogin" class="dark-mode-toggle-login">다크모드</button>
         <div class="login-box">
             <div class="login-header">
                 <h1>🔐 재고 관리 시스템</h1>
@@ -38,12 +39,12 @@
     <!-- 메인 대시보드 (로그인 후 표시) -->
     <div id="mainDashboard" class="container" style="display: none;">
         <header>
-            <div class="lotte-brand" style="text-align: center; margin-bottom: 15px;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 5px;">
-                    <img src="logo.png" alt="Lotte Logo" style="height: 32px; width: auto; opacity: 0.85;">
-                    <span style="font-size: 0.85rem; color: #5f7d95; font-weight: 700;">Happy Moments</span>
+            <div class="lotte-brand" style="text-align: center; margin-bottom: 4px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 2px;">
+                    <img src="logo.png" alt="Lotte Logo" style="height: 18px; width: auto; opacity: 0.85;">
+                    <span style="font-size: 0.65rem; color: #5f7d95; font-weight: 700;">Happy Moments</span>
                 </div>
-                <div style="font-size: 0.75rem; color: #7f8c8d;">
+                <div style="font-size: 0.6rem; color: #7f8c8d;">
                     Лотте КФ Рус
                 </div>
             </div>
@@ -51,6 +52,7 @@
                 <h1>📦 제품 재고 현황</h1>
                 <div class="user-info">
                     <span class="username-display">👤 <span id="currentUser"></span></span>
+                    <button id="darkModeToggle" class="dark-mode-toggle" title="다크모드 전환">다크모드</button>
                     <button id="logoutBtn" class="logout-btn">로그아웃</button>
                 </div>
             </div>
@@ -143,10 +145,10 @@
                 <thead>
                     <tr>
                         <th class="sortable" data-column="code">제품코드</th>
-                        <th class="sortable" data-column="name">제품명</th>
-                        <th class="sortable" data-column="category">대분류</th>
-                        <th class="sortable" data-column="product">중분류</th>
-                        <th class="sortable" data-column="productionDate">유통기한</th>
+                        <th class="sortable" data-column="categoryMain">분류(대분류)</th>
+                        <th class="sortable" data-column="region">분류(판매자)</th>
+                        <th class="sortable" data-column="taste">분류(맛)</th>
+                        <th class="sortable" data-column="package">분류(봉)</th>
                         <th class="sortable" data-column="status">보관상태</th>
                         <th class="sortable" data-column="stock">재고량(박스)</th>
                         <th class="sortable" data-column="shelfLife">유통기한구간</th>

@@ -45,15 +45,15 @@ body:has(#loginPage:not([style*="display: none"]))::before {
 
 header {
     text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    padding-top: 20px;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    padding-top: 3px;
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 1.2rem;
     color: #2d3436;
-    margin-bottom: 10px;
+    margin-bottom: 3px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: -0.5px;
@@ -61,7 +61,7 @@ header h1 {
 
 .header-info {
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
 }
 
 .summary-cards {
@@ -487,7 +487,7 @@ td {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
 }
 
 .user-info {
@@ -497,7 +497,7 @@ td {
 }
 
 .username-display {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     color: #555;
     font-weight: 600;
 }
@@ -516,6 +516,233 @@ td {
 
 .logout-btn:hover {
     background: #d32f2f;
+}
+
+/* 다크모드 토글 버튼 */
+.dark-mode-toggle {
+    padding: 8px 16px;
+    background: #4a6278;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark-mode-toggle:hover {
+    background: #5f7d95;
+    transform: translateY(-2px);
+}
+
+/* 로그인 페이지 다크모드 토글 버튼 */
+.dark-mode-toggle-login {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.dark-mode-toggle-login:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+/* 다크모드 스타일 */
+body[data-theme="dark"] {
+    background: #1a1a1a;
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .container {
+    background: #2d2d2d;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+body[data-theme="dark"] header h1 {
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .header-info {
+    color: #b0b0b0;
+}
+
+body[data-theme="dark"] .username-display {
+    color: #b0b0b0;
+}
+
+body[data-theme="dark"] .card {
+    background: linear-gradient(135deg, #3a4d5f 0%, #2d3e4f 100%);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme="dark"] .card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+body[data-theme="dark"] .filters {
+    background: #3a3a3a;
+}
+
+body[data-theme="dark"] .filter-group label {
+    color: #b0b0b0;
+}
+
+body[data-theme="dark"] .filter-group select,
+body[data-theme="dark"] .filter-group input {
+    background: #4a4a4a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .filter-group select:focus,
+body[data-theme="dark"] .filter-group input:focus {
+    border-color: #5f7d95;
+    background: #555;
+}
+
+body[data-theme="dark"] .table-container {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme="dark"] table {
+    background: #2d2d2d;
+}
+
+body[data-theme="dark"] thead {
+    background: linear-gradient(135deg, #3a4d5f 0%, #2d3e4f 100%);
+}
+
+body[data-theme="dark"] tbody tr {
+    border-bottom: 1px solid #444;
+}
+
+body[data-theme="dark"] tbody tr:hover {
+    background-color: #3a3a3a;
+}
+
+body[data-theme="dark"] td {
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .stock-bar {
+    background: #444;
+}
+
+body[data-theme="dark"] .shelf-life-bar {
+    background: #444;
+}
+
+body[data-theme="dark"] .status-badge.good {
+    background: #2d5016;
+    color: #a5d6a7;
+}
+
+body[data-theme="dark"] .status-badge.warning {
+    background: #5d4037;
+    color: #ffcc80;
+}
+
+body[data-theme="dark"] .status-badge.danger {
+    background: #5d1f1f;
+    color: #ef9a9a;
+}
+
+body[data-theme="dark"] .page-btn {
+    background: #3a3a3a;
+    border-color: #5f7d95;
+    color: #5f7d95;
+}
+
+body[data-theme="dark"] .page-btn:hover:not(:disabled) {
+    background: #5f7d95;
+    color: white;
+}
+
+body[data-theme="dark"] .page-info {
+    color: #b0b0b0;
+}
+
+body[data-theme="dark"] #itemsPerPage {
+    background: #4a4a4a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .stock-number {
+    color: #81a8c8;
+}
+
+body[data-theme="dark"] .dark-mode-toggle {
+    background: #5f7d95;
+}
+
+body[data-theme="dark"] .dark-mode-toggle:hover {
+    background: #4a6278;
+}
+
+/* 로그인 페이지 다크모드 */
+body[data-theme="dark"]:has(#loginPage:not([style*="display: none"])) {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+}
+
+body[data-theme="dark"] .dark-mode-toggle-login {
+    background: rgba(95, 125, 149, 0.3);
+    border-color: rgba(95, 125, 149, 0.5);
+}
+
+body[data-theme="dark"] .dark-mode-toggle-login:hover {
+    background: rgba(95, 125, 149, 0.5);
+    border-color: rgba(95, 125, 149, 0.7);
+}
+
+body[data-theme="dark"] .login-box {
+    background: #2d2d2d;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+body[data-theme="dark"] .login-header h1 {
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .login-header p {
+    color: #b0b0b0;
+}
+
+body[data-theme="dark"] .login-form label {
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .login-form input[type="text"],
+body[data-theme="dark"] .login-form input[type="password"] {
+    background: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body[data-theme="dark"] .login-form input[type="text"]:focus,
+body[data-theme="dark"] .login-form input[type="password"]:focus {
+    border-color: #5f7d95;
+    box-shadow: 0 0 0 3px rgba(95, 125, 149, 0.2);
+}
+
+body[data-theme="dark"] .remember-me span {
+    color: #b0b0b0;
 }
 
 @media (max-width: 768px) {

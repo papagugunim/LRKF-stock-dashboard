@@ -123,6 +123,54 @@ function handleLogout() {
 }
 
 // ============================================
+// 다크모드 관리
+// ============================================
+
+// 다크모드 초기화
+function initDarkMode() {
+    const savedTheme = localStorage.getItem('theme');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeToggleLogin = document.getElementById('darkModeToggleLogin');
+
+    if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        if (darkModeToggle) {
+            darkModeToggle.textContent = '라이트모드';
+        }
+        if (darkModeToggleLogin) {
+            darkModeToggleLogin.textContent = '라이트모드';
+        }
+    }
+}
+
+// 다크모드 토글
+function toggleDarkMode() {
+    const currentTheme = document.body.getAttribute('data-theme');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeToggleLogin = document.getElementById('darkModeToggleLogin');
+
+    if (currentTheme === 'dark') {
+        document.body.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        if (darkModeToggle) {
+            darkModeToggle.textContent = '다크모드';
+        }
+        if (darkModeToggleLogin) {
+            darkModeToggleLogin.textContent = '다크모드';
+        }
+    } else {
+        document.body.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        if (darkModeToggle) {
+            darkModeToggle.textContent = '라이트모드';
+        }
+        if (darkModeToggleLogin) {
+            darkModeToggleLogin.textContent = '라이트모드';
+        }
+    }
+}
+
+// ============================================
 // 재고 관리 (기존 코드)
 // ============================================
 
@@ -344,78 +392,31 @@ function getCategoryFromProductLine(productLine) {
 // 재고 데이터 로드 (Google Sheets API)
 async function loadStockData() {
     try {
-        // 먼저 제품코드 마스터 데이터 로드 (선택사항)
-        await loadProductCodes();
-
-        // Google Sheets에서 재고 데이터 가져오기
+        // Google Drive에서 재고 데이터 가져오기
+        // 참고: Product ref 병합은 백엔드(Google Apps Script)에서 이미 처리됨
         const url = `${API_URL}?action=getStock&token=${API_TOKEN}`;
         const response = await fetch(url);
         const result = await response.json();
 
         if (result.status === 'success' && result.data) {
-            stockData = result.data;
+            // 백엔드에서 이미 그룹화되고 Product ref가 병합된 데이터를 받음
+            // 필요한 숫자 필드만 추가 파싱
+            stockData = result.data.map(item => {
+                // 유통기한 구간을 숫자로 변환 (필터링 및 정렬용)
+                const shelfLifeRange = item['유통기한구간'] || '';
+                let shelfLifeNum = 85; // 기본값
 
-            // 재고량을 숫자로 변환하고 제품 정보 매핑
-            const rawData = stockData.map(item => {
-                const productCode = item['제품코드'];
-                const productInfo = productCodeMap[productCode];
-
-                // Excel raw 데이터의 제품라인으로 대분류 결정
-                const productLine = item['제품라인'];
-                const category = getCategoryFromProductLine(productLine);
-
-                // Product ref에서 지역 정보 가져오기 (없으면 내수용 기본값)
-                const region = productInfo && productInfo.region ? productInfo.region : '내수용';
-
-                // Product ref에서 맛 정보 가져오기 (필터용)
-                let taste = productInfo && productInfo.taste ? productInfo.taste : '';
-
-                // Product ref에 맛 정보가 없으면 제품명에서 추출 시도
-                if (!taste) {
-                    const productName = item['제품명(한국어)'] || '';
-                    if (productName.includes('바나나')) taste = '바나나';
-                    else if (productName.includes('카카오')) taste = '카카오';
-                    else if (productName.includes('딸기')) taste = '딸기';
-                    else if (productName.includes('치즈')) taste = '치즈';
-                    else taste = '오리지날';
-                }
-
-                // Product ref에서 패키지(봉) 정보 가져오기
-                let packageType = productInfo && productInfo.packageType ? productInfo.packageType : '';
-
-                // Product ref에 패키지 정보가 없으면 제품명에서 추출 시도
-                if (!packageType) {
-                    const productName = item['제품명(한국어)'] || '';
-                    if (productName.includes('48봉')) packageType = '48봉';
-                    else if (productName.includes('16봉')) packageType = '16봉';
-                    else if (productName.includes('12봉')) packageType = '12봉';
-                    else if (productName.includes('6봉')) packageType = '6봉';
-                    else if (productName.includes('4봉')) packageType = '4봉';
-                    else packageType = '기타';
-                }
-
-                // 중분류: 봉 정보 사용
-                const subCategory = packageType;
-
-                // 보관창고: LProduct만 표시, 나머지는 기타
-                const warehouse = item['보관창고'] === 'LProduct' ? 'LProduct' : '기타';
+                if (shelfLifeRange.includes('90% 이상')) shelfLifeNum = 95;
+                else if (shelfLifeRange.includes('80~90%')) shelfLifeNum = 85;
+                else if (shelfLifeRange.includes('70~80%')) shelfLifeNum = 75;
+                else if (shelfLifeRange.includes('70% 미만')) shelfLifeNum = 65;
 
                 return {
                     ...item,
-                    '제품코드': productCode,
-                    '제품명(한국어)': item['제품명(한국어)'], // Excel에서 이미 제공
-                    '지역분류': region,
-                    '대분류': category,
-                    '중분류': subCategory,
-                    '맛': taste, // 필터용 맛 정보
-                    '보관창고': warehouse,
                     stockNum: parseFloat(item['재고']) || 0,
-                    shelfLifeNum: parseFloat(item['유통기한(%)']) || 0
+                    shelfLifeNum: shelfLifeNum
                 };
             });
-
-            // 제품코드별로 그룹화하고 유통기한 구간별로 합산
-            stockData = groupAndSumData(rawData);
 
             // 재고량이 0인 항목 제외
             stockData = stockData.filter(item => item.stockNum > 0);
@@ -505,10 +506,10 @@ function renderTable() {
     tableBody.innerHTML = pageData.map(item => `
         <tr>
             <td>${item['제품코드']}</td>
-            <td>${item['제품명(한국어)']}</td>
-            <td>${item['대분류']}</td>
-            <td>${item['중분류']}</td>
-            <td>${item['생산일자']}</td>
+            <td>${item['대분류'] || '-'}</td>
+            <td>${item['지역'] || '-'}</td>
+            <td>${item['맛'] || '-'}</td>
+            <td>${item['패키지'] || '-'}</td>
             <td>${getStatusBadge(item['보관상태'])}</td>
             <td><span class="stock-number">${formatNumber(Math.round(item.stockNum))}</span></td>
             <td>${item['유통기한구간']}</td>
@@ -533,27 +534,27 @@ function updatePagination() {
 function customSort(a, b) {
     // 정렬 순서 정의
     const regionOrder = ['내수용', '벨라루스용', '카작용', '소머리'];
-    const categoryOrder = ['오리지날', '카카오', '바나나', '치즈', '딸기', '아망테'];
-    const subCategoryOrder = ['48봉', '16봉', '12봉', '6봉', '4봉'];
+    const tasteOrder = ['오리지날', '카카오', '바나나', '치즈', '딸기', '아망테'];
+    const packageOrder = ['48봉', '16봉', '12봉', '6봉', '4봉'];
 
-    // 1차: 지역분류
-    const regionA = regionOrder.indexOf(a['지역분류']);
-    const regionB = regionOrder.indexOf(b['지역분류']);
+    // 1차: 지역
+    const regionA = regionOrder.indexOf(a['지역']);
+    const regionB = regionOrder.indexOf(b['지역']);
     if (regionA !== regionB) {
         return (regionA === -1 ? 999 : regionA) - (regionB === -1 ? 999 : regionB);
     }
 
-    // 2차: 대분류(맛)
-    const categoryA = categoryOrder.indexOf(a['대분류']);
-    const categoryB = categoryOrder.indexOf(b['대분류']);
-    if (categoryA !== categoryB) {
-        return (categoryA === -1 ? 999 : categoryA) - (categoryB === -1 ? 999 : categoryB);
+    // 2차: 맛
+    const tasteA = tasteOrder.indexOf(a['맛']);
+    const tasteB = tasteOrder.indexOf(b['맛']);
+    if (tasteA !== tasteB) {
+        return (tasteA === -1 ? 999 : tasteA) - (tasteB === -1 ? 999 : tasteB);
     }
 
-    // 3차: 중분류(패키지)
-    const subCategoryA = subCategoryOrder.indexOf(a['중분류']);
-    const subCategoryB = subCategoryOrder.indexOf(b['중분류']);
-    return (subCategoryA === -1 ? 999 : subCategoryA) - (subCategoryB === -1 ? 999 : subCategoryB);
+    // 3차: 패키지
+    const packageA = packageOrder.indexOf(a['패키지']);
+    const packageB = packageOrder.indexOf(b['패키지']);
+    return (packageA === -1 ? 999 : packageA) - (packageB === -1 ? 999 : packageB);
 }
 
 // 필터링
@@ -570,12 +571,11 @@ function applyFilters() {
         if (item.stockNum <= 0) return false;
 
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
-        const matchRegion = regionFilter === 'all' || item['지역분류'] === regionFilter;
-        const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter; // 대분류로 필터
-        const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter; // 맛으로 필터
-        const matchPackage = packageFilter === 'all' || item['중분류'] === packageFilter; // 중분류(봉)로 필터
+        const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
+        const matchCategory = categoryFilter === 'all' || item['맛'] === categoryFilter;
+        const matchProduct = productFilter === 'all' || item['패키지'] === productFilter;
         const matchSearch = searchText === '' ||
-                          item['제품명(한국어)'].toLowerCase().includes(searchText) ||
+                          item['제품명'].toLowerCase().includes(searchText) ||
                           item['제품코드'].toLowerCase().includes(searchText);
 
         return matchWarehouse && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
@@ -600,11 +600,10 @@ function sortTable(column) {
 
     const columnMap = {
         'code': '제품코드',
-        'name': '제품명(한국어)',
-        'category': '대분류',
-        'product': '중분류',
-        'warehouse': '보관창고',
-        'productionDate': '생산일자',
+        'categoryMain': '대분류',
+        'region': '지역',
+        'taste': '맛',
+        'package': '패키지',
         'status': '보관상태',
         'stock': 'stockNum',
         'shelfLife': '유통기한구간'
@@ -645,6 +644,9 @@ function sortTable(column) {
 
 // 이벤트 리스너 등록
 document.addEventListener('DOMContentLoaded', () => {
+    // 다크모드 초기화 (로그인 전에도 적용)
+    initDarkMode();
+
     // 로그인 상태 체크
     const isLoggedIn = checkAuth();
 
@@ -653,6 +655,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 로그아웃 버튼 이벤트
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+    // 다크모드 토글 버튼 이벤트 (메인 대시보드)
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+
+    // 다크모드 토글 버튼 이벤트 (로그인 페이지)
+    const darkModeToggleLogin = document.getElementById('darkModeToggleLogin');
+    if (darkModeToggleLogin) {
+        darkModeToggleLogin.addEventListener('click', toggleDarkMode);
+    }
 
     // 로그인되지 않은 경우 여기서 종료
     if (!isLoggedIn) {
