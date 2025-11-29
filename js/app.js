@@ -105,8 +105,8 @@ function showDashboard(userData) {
 
     // 데이터 로드 (최초 1회만)
     if (stockData.length === 0) {
-        // 대분류 필터 로드 (Product ref에서)
-        loadCategoryMainFilter();
+        // 모든 필터 로드 (Product ref에서)
+        loadAllFilters();
         // 재고 데이터 로드
         loadStockData();
     }
@@ -392,36 +392,62 @@ function getCategoryFromProductLine(productLine) {
     return '기타';
 }
 
-// 대분류 필터 로드 (Product ref에서)
-async function loadCategoryMainFilter() {
+// 필터 동적 로드 범용 함수
+async function loadFilterOptions(action, selectId, filterName) {
     try {
-        const url = `${API_URL}?action=getCategoryMain&token=${API_TOKEN}`;
+        const url = `${API_URL}?action=${action}&token=${API_TOKEN}`;
         const response = await fetch(url);
         const result = await response.json();
 
         if (result.status === 'success' && result.data) {
-            const categories = result.data;
-            const select = document.getElementById('categoryMainFilter');
+            const options = result.data;
+            const select = document.getElementById(selectId);
 
             // 기존 옵션 제거 (전체 제외)
             while (select.options.length > 1) {
                 select.remove(1);
             }
 
-            // Product ref에서 가져온 대분류 추가
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category;
-                select.appendChild(option);
+            // Product ref에서 가져온 옵션 추가
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                select.appendChild(optionElement);
             });
 
-            console.log('대분류 필터 로드 완료:', categories);
+            console.log(`${filterName} 필터 로드 완료:`, options);
         }
     } catch (error) {
-        console.error('대분류 필터 로드 실패:', error);
-        // 실패해도 기본값으로 작동하도록 에러를 던지지 않음
+        console.error(`${filterName} 필터 로드 실패:`, error);
     }
+}
+
+// 개별 필터 로드 함수들
+async function loadCategoryMainFilter() {
+    await loadFilterOptions('getCategoryMain', 'categoryMainFilter', '대분류');
+}
+
+async function loadCategoryRegionFilter() {
+    await loadFilterOptions('getCategoryRegion', 'regionFilter', '판매지');
+}
+
+async function loadCategoryTasteFilter() {
+    await loadFilterOptions('getCategoryTaste', 'categoryFilter', '맛');
+}
+
+async function loadCategoryPackageFilter() {
+    await loadFilterOptions('getCategoryPackage', 'productFilter', '봉');
+}
+
+// 모든 필터 동시 로드
+async function loadAllFilters() {
+    await Promise.all([
+        loadCategoryMainFilter(),
+        loadCategoryRegionFilter(),
+        loadCategoryTasteFilter(),
+        loadCategoryPackageFilter()
+    ]);
 }
 
 // 재고 데이터 로드 (Google Sheets API)
@@ -653,6 +679,22 @@ function applyFilters() {
     renderTable();
 }
 
+// 필터 초기화
+function resetFilters() {
+    // 모든 select 필터를 "전체"로 초기화
+    document.getElementById('warehouseFilter').value = 'LProduct';
+    document.getElementById('regionFilter').value = 'all';
+    document.getElementById('categoryMainFilter').value = 'all';
+    document.getElementById('categoryFilter').value = 'all';
+    document.getElementById('productFilter').value = 'all';
+
+    // 검색 입력 초기화
+    document.getElementById('searchInput').value = '';
+
+    // 필터 적용
+    applyFilters();
+}
+
 // 정렬
 function sortTable(column) {
     if (sortColumn === column) {
@@ -747,6 +789,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('categoryFilter').addEventListener('change', applyFilters);
     document.getElementById('productFilter').addEventListener('change', applyFilters);
     document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    // 필터 초기화 버튼
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
 
     // 페이지네이션 이벤트
     document.getElementById('prevPage').addEventListener('click', () => {

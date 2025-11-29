@@ -48,6 +48,24 @@ function doGet(e) {
       return createResponse('success', '대분류 목록 로드 성공', data);
     }
 
+    // 판매지 목록 가져오기 (Product ref C열에서)
+    if (action === 'getCategoryRegion') {
+      const data = getCategoryList('분류(판매지)');
+      return createResponse('success', '판매지 목록 로드 성공', data);
+    }
+
+    // 맛 목록 가져오기 (Product ref D열에서)
+    if (action === 'getCategoryTaste') {
+      const data = getCategoryList('분류(맛)');
+      return createResponse('success', '맛 목록 로드 성공', data);
+    }
+
+    // 봉 목록 가져오기 (Product ref E열에서)
+    if (action === 'getCategoryPackage') {
+      const data = getCategoryList('분류(봉)');
+      return createResponse('success', '봉 목록 로드 성공', data);
+    }
+
     // 재고 현황 데이터 가져오기 (Google Drive의 최신 YYYYMMDD.xlsx 파일에서)
     if (action === 'getStock') {
       const data = getStockDataFromDrive();
@@ -371,6 +389,13 @@ function getProductCodesData() {
  * Product ref에서 대분류 목록 가져오기 (B열)
  */
 function getCategoryMainList() {
+  return getCategoryList('분류(대분류)');
+}
+
+/**
+ * Product ref에서 특정 컬럼의 고유값 목록 가져오기 (범용 함수)
+ */
+function getCategoryList(columnName) {
   try {
     const sheet = SpreadsheetApp.openById(PRODUCT_REF_SPREADSHEET_ID).getSheetByName('product ref');
     if (!sheet) {
@@ -382,11 +407,11 @@ function getCategoryMainList() {
     const headers = data[0];
     const rows = data.slice(1);
 
-    // B열 인덱스 찾기 (분류(대분류))
-    const categoryMainIndex = headers.indexOf('분류(대분류)');
+    // 컬럼 인덱스 찾기
+    const columnIndex = headers.indexOf(columnName);
 
-    if (categoryMainIndex === -1) {
-      Logger.log('분류(대분류) 컬럼을 찾을 수 없습니다.');
+    if (columnIndex === -1) {
+      Logger.log(columnName + ' 컬럼을 찾을 수 없습니다.');
       return [];
     }
 
@@ -394,7 +419,7 @@ function getCategoryMainList() {
     const categorySet = new Set();
 
     rows.forEach(row => {
-      const category = row[categoryMainIndex];
+      const category = row[columnIndex];
       if (category && category !== '') {
         categorySet.add(category.toString());
       }
@@ -403,11 +428,11 @@ function getCategoryMainList() {
     // 배열로 변환하고 정렬
     const categories = Array.from(categorySet).sort();
 
-    Logger.log('대분류 목록: ' + categories.join(', '));
+    Logger.log(columnName + ' 목록: ' + categories.join(', '));
     return categories;
 
   } catch (error) {
-    Logger.log('대분류 목록 로드 오류: ' + error.toString());
+    Logger.log(columnName + ' 목록 로드 오류: ' + error.toString());
     return [];
   }
 }

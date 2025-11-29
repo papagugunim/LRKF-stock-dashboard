@@ -148,6 +148,28 @@ header h1 {
     min-width: 200px;
 }
 
+.reset-btn {
+    padding: 8px 20px;
+    background: #ED1C24;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reset-btn:hover {
+    background: #C8102E;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(237, 28, 36, 0.3);
+}
+
+.reset-btn:active {
+    transform: translateY(0);
+}
+
 .table-container {
     overflow-x: auto;
     margin-bottom: 20px;

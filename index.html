@@ -105,37 +105,29 @@
                 <label>분류(판매지):</label>
                 <select id="regionFilter">
                     <option value="all">전체</option>
-                    <option value="내수용">내수용</option>
-                    <option value="벨라루스용">벨라루스용</option>
-                    <option value="카작용">카작용</option>
-                    <option value="소머리">소머리</option>
+                    <!-- Product ref에서 동적으로 로드됨 -->
                 </select>
             </div>
             <div class="filter-group">
                 <label>분류(맛):</label>
                 <select id="categoryFilter">
                     <option value="all">전체</option>
-                    <option value="오리지날">오리지날</option>
-                    <option value="카카오">카카오</option>
-                    <option value="바나나">바나나</option>
-                    <option value="딸기">딸기</option>
-                    <option value="치즈">치즈</option>
+                    <!-- Product ref에서 동적으로 로드됨 -->
                 </select>
             </div>
             <div class="filter-group">
                 <label>분류(봉):</label>
                 <select id="productFilter">
                     <option value="all">전체</option>
-                    <option value="4봉">4봉</option>
-                    <option value="6봉">6봉</option>
-                    <option value="12봉">12봉</option>
-                    <option value="16봉">16봉</option>
-                    <option value="48봉">48봉</option>
+                    <!-- Product ref에서 동적으로 로드됨 -->
                 </select>
             </div>
             <div class="filter-group">
-                <label>검색:</label>
-                <input type="text" id="searchInput" placeholder="제품명 검색...">
+                <label>제품코드:</label>
+                <input type="text" id="searchInput" placeholder="제품코드 또는 제품명 검색...">
+            </div>
+            <div class="filter-group">
+                <button id="resetFiltersBtn" class="reset-btn">초기화</button>
             </div>
         </div>
 
