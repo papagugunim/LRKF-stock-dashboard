@@ -448,6 +448,28 @@ async function loadAllFilters() {
         loadCategoryTasteFilter(),
         loadCategoryPackageFilter()
     ]);
+
+    // 필터 로드 후 이벤트 리스너 재등록
+    setupFilterListeners();
+}
+
+// 필터 이벤트 리스너 설정
+function setupFilterListeners() {
+    document.getElementById('warehouseFilter').removeEventListener('change', applyFilters);
+    document.getElementById('regionFilter').removeEventListener('change', applyFilters);
+    document.getElementById('categoryMainFilter').removeEventListener('change', applyFilters);
+    document.getElementById('categoryFilter').removeEventListener('change', applyFilters);
+    document.getElementById('productFilter').removeEventListener('change', applyFilters);
+    document.getElementById('searchInput').removeEventListener('input', applyFilters);
+
+    document.getElementById('warehouseFilter').addEventListener('change', applyFilters);
+    document.getElementById('regionFilter').addEventListener('change', applyFilters);
+    document.getElementById('categoryMainFilter').addEventListener('change', applyFilters);
+    document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+    document.getElementById('productFilter').addEventListener('change', applyFilters);
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    console.log('필터 이벤트 리스너 등록 완료');
 }
 
 // 재고 데이터 로드 (Google Sheets API)
