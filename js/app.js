@@ -545,6 +545,8 @@ async function loadStockData() {
 
 // 요약 정보 업데이트
 function updateSummary() {
+    console.log('updateSummary 호출됨, filteredData 개수:', filteredData.length);
+
     const totalStock = filteredData.reduce((sum, item) => sum + item.stockNum, 0);
 
     // 제품코드 기준으로 고유한 SKU 개수 계산
@@ -559,6 +561,13 @@ function updateSummary() {
     const warningStock = filteredData
         .filter(item => item.shelfLifeNum < 80)
         .reduce((sum, item) => sum + item.stockNum, 0);
+
+    console.log('계산된 값:', {
+        totalStock: Math.round(totalStock),
+        productCount,
+        avgShelfLife: avgShelfLife.toFixed(1),
+        warningStock: Math.round(warningStock)
+    });
 
     document.getElementById('totalStock').textContent = formatNumber(Math.round(totalStock));
     document.getElementById('productCount').textContent = productCount;
