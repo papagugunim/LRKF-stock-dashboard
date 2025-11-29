@@ -42,6 +42,12 @@ function doGet(e) {
       return createResponse('success', '제품코드 데이터 로드 성공', data);
     }
 
+    // 대분류 목록 가져오기 (Product ref B열에서)
+    if (action === 'getCategoryMain') {
+      const data = getCategoryMainList();
+      return createResponse('success', '대분류 목록 로드 성공', data);
+    }
+
     // 재고 현황 데이터 가져오기 (Google Drive의 최신 YYYYMMDD.xlsx 파일에서)
     if (action === 'getStock') {
       const data = getStockDataFromDrive();
@@ -357,6 +363,51 @@ function getProductCodesData() {
     });
   } catch (error) {
     Logger.log('제품코드 데이터 로드 오류: ' + error.toString());
+    return [];
+  }
+}
+
+/**
+ * Product ref에서 대분류 목록 가져오기 (B열)
+ */
+function getCategoryMainList() {
+  try {
+    const sheet = SpreadsheetApp.openById(PRODUCT_REF_SPREADSHEET_ID).getSheetByName('product ref');
+    if (!sheet) {
+      Logger.log('product ref 시트를 찾을 수 없습니다.');
+      return [];
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    // B열 인덱스 찾기 (분류(대분류))
+    const categoryMainIndex = headers.indexOf('분류(대분류)');
+
+    if (categoryMainIndex === -1) {
+      Logger.log('분류(대분류) 컬럼을 찾을 수 없습니다.');
+      return [];
+    }
+
+    // 중복 제거를 위한 Set 사용
+    const categorySet = new Set();
+
+    rows.forEach(row => {
+      const category = row[categoryMainIndex];
+      if (category && category !== '') {
+        categorySet.add(category.toString());
+      }
+    });
+
+    // 배열로 변환하고 정렬
+    const categories = Array.from(categorySet).sort();
+
+    Logger.log('대분류 목록: ' + categories.join(', '));
+    return categories;
+
+  } catch (error) {
+    Logger.log('대분류 목록 로드 오류: ' + error.toString());
     return [];
   }
 }

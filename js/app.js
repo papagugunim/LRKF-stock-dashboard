@@ -105,6 +105,9 @@ function showDashboard(userData) {
 
     // 데이터 로드 (최초 1회만)
     if (stockData.length === 0) {
+        // 대분류 필터 로드 (Product ref에서)
+        loadCategoryMainFilter();
+        // 재고 데이터 로드
         loadStockData();
     }
 }
@@ -387,6 +390,38 @@ function getCategoryFromProductLine(productLine) {
     if (line === 'Amante') return '아망테';
     if (line === 'Chocopie') return '초코파이';
     return '기타';
+}
+
+// 대분류 필터 로드 (Product ref에서)
+async function loadCategoryMainFilter() {
+    try {
+        const url = `${API_URL}?action=getCategoryMain&token=${API_TOKEN}`;
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data) {
+            const categories = result.data;
+            const select = document.getElementById('categoryMainFilter');
+
+            // 기존 옵션 제거 (전체 제외)
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            // Product ref에서 가져온 대분류 추가
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+
+            console.log('대분류 필터 로드 완료:', categories);
+        }
+    } catch (error) {
+        console.error('대분류 필터 로드 실패:', error);
+        // 실패해도 기본값으로 작동하도록 에러를 던지지 않음
+    }
 }
 
 // 재고 데이터 로드 (Google Sheets API)
