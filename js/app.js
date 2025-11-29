@@ -183,40 +183,40 @@ function updateLastUpdateTime() {
 }
 
 // 제품코드 마스터 데이터 로드 (Google Sheets API)
+// 참고: Product ref 스프레드시트는 선택사항입니다.
+// Excel 데이터에 이미 모든 정보가 있으므로 없어도 작동합니다.
 async function loadProductCodes() {
     try {
         const url = `${API_URL}?action=getProductCodes&token=${API_TOKEN}`;
         const response = await fetch(url);
         const result = await response.json();
 
-        if (result.status === 'success' && result.data) {
+        if (result.status === 'success' && result.data && result.data.length > 0) {
             const products = result.data;
 
-            // 제품코드를 키로 하는 맵 생성 (제품명, 지역분류, 대분류, 중분류 포함)
+            // Product ref 스프레드시트의 실제 컬럼 이름에 맞춤
             products.forEach(product => {
                 const code = product['제품코드'];
-                const koreanName = product['제품명(한국어)'];
-                const region = product['지역분류'] || '기타'; // 지역분류
-                const category = product['구분(맛)'] || '기타'; // 대분류
-                const subCategory = product['구분(패키지)'] || '기타'; // 중분류
+                const region = product['지역'] || '';
+                const taste = product['맛'] || '';
+                const packageType = product['패키지'] || '';
 
-                if (code && koreanName) {
+                if (code) {
                     productCodeMap[code] = {
-                        name: koreanName,
                         region: region,
-                        category: category,
-                        subCategory: subCategory
+                        taste: taste,
+                        packageType: packageType
                     };
                 }
             });
 
             console.log('제품코드 매핑 완료:', Object.keys(productCodeMap).length, '개');
         } else {
-            throw new Error(result.message || '제품코드 데이터 로드 실패');
+            console.log('Product ref 데이터 없음 - Excel 데이터만 사용');
         }
     } catch (error) {
-        console.error('제품코드 로드 실패:', error);
-        alert('제품코드 데이터를 불러오는데 실패했습니다: ' + error.message);
+        console.warn('제품코드 로드 실패 (선택사항):', error);
+        // Product ref가 없어도 계속 진행 (Excel 데이터만 사용)
     }
 }
 
@@ -331,10 +331,20 @@ function groupAndSumData(data) {
     });
 }
 
+// 제품 라인으로 대분류 결정
+function getCategoryFromProductLine(productLine) {
+    if (!productLine) return '기타';
+
+    const line = productLine.toString().trim();
+    if (line === 'Amante') return '아망테';
+    if (line === 'Chocopie') return '초코파이';
+    return '기타';
+}
+
 // 재고 데이터 로드 (Google Sheets API)
 async function loadStockData() {
     try {
-        // 먼저 제품코드 마스터 데이터 로드
+        // 먼저 제품코드 마스터 데이터 로드 (선택사항)
         await loadProductCodes();
 
         // Google Sheets에서 재고 데이터 가져오기
@@ -345,16 +355,47 @@ async function loadStockData() {
         if (result.status === 'success' && result.data) {
             stockData = result.data;
 
-            // 재고량을 숫자로 변환하고 한국어 제품명 매칭
+            // 재고량을 숫자로 변환하고 제품 정보 매핑
             const rawData = stockData.map(item => {
                 const productCode = item['제품코드'];
                 const productInfo = productCodeMap[productCode];
 
-                // 제품 정보가 없으면 기타로 설정
-                const koreanName = productInfo ? productInfo.name : '기타';
-                const region = productInfo ? productInfo.region : '기타';
-                const category = productInfo ? productInfo.category : '기타';
-                const subCategory = productInfo ? productInfo.subCategory : '기타';
+                // Excel raw 데이터의 제품라인으로 대분류 결정
+                const productLine = item['제품라인'];
+                const category = getCategoryFromProductLine(productLine);
+
+                // Product ref에서 지역 정보 가져오기 (없으면 내수용 기본값)
+                const region = productInfo && productInfo.region ? productInfo.region : '내수용';
+
+                // Product ref에서 맛 정보 가져오기 (필터용)
+                let taste = productInfo && productInfo.taste ? productInfo.taste : '';
+
+                // Product ref에 맛 정보가 없으면 제품명에서 추출 시도
+                if (!taste) {
+                    const productName = item['제품명(한국어)'] || '';
+                    if (productName.includes('바나나')) taste = '바나나';
+                    else if (productName.includes('카카오')) taste = '카카오';
+                    else if (productName.includes('딸기')) taste = '딸기';
+                    else if (productName.includes('치즈')) taste = '치즈';
+                    else taste = '오리지날';
+                }
+
+                // Product ref에서 패키지(봉) 정보 가져오기
+                let packageType = productInfo && productInfo.packageType ? productInfo.packageType : '';
+
+                // Product ref에 패키지 정보가 없으면 제품명에서 추출 시도
+                if (!packageType) {
+                    const productName = item['제품명(한국어)'] || '';
+                    if (productName.includes('48봉')) packageType = '48봉';
+                    else if (productName.includes('16봉')) packageType = '16봉';
+                    else if (productName.includes('12봉')) packageType = '12봉';
+                    else if (productName.includes('6봉')) packageType = '6봉';
+                    else if (productName.includes('4봉')) packageType = '4봉';
+                    else packageType = '기타';
+                }
+
+                // 중분류: 봉 정보 사용
+                const subCategory = packageType;
 
                 // 보관창고: LProduct만 표시, 나머지는 기타
                 const warehouse = item['보관창고'] === 'LProduct' ? 'LProduct' : '기타';
@@ -362,10 +403,11 @@ async function loadStockData() {
                 return {
                     ...item,
                     '제품코드': productCode,
-                    '제품명(한국어)': koreanName,
+                    '제품명(한국어)': item['제품명(한국어)'], // Excel에서 이미 제공
                     '지역분류': region,
                     '대분류': category,
                     '중분류': subCategory,
+                    '맛': taste, // 필터용 맛 정보
                     '보관창고': warehouse,
                     stockNum: parseFloat(item['재고']) || 0,
                     shelfLifeNum: parseFloat(item['유통기한(%)']) || 0
@@ -518,8 +560,9 @@ function customSort(a, b) {
 function applyFilters() {
     const warehouseFilter = document.getElementById('warehouseFilter').value;
     const regionFilter = document.getElementById('regionFilter').value;
-    const categoryFilter = document.getElementById('categoryFilter').value;
-    const productFilter = document.getElementById('productFilter').value;
+    const categoryMainFilter = document.getElementById('categoryMainFilter').value; // 대분류 필터
+    const tasteFilter = document.getElementById('categoryFilter').value; // 맛 필터
+    const packageFilter = document.getElementById('productFilter').value; // 패키지(봉) 필터
     const searchText = document.getElementById('searchInput').value.toLowerCase();
 
     filteredData = stockData.filter(item => {
@@ -528,13 +571,14 @@ function applyFilters() {
 
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchRegion = regionFilter === 'all' || item['지역분류'] === regionFilter;
-        const matchCategory = categoryFilter === 'all' || item['대분류'] === categoryFilter;
-        const matchProduct = productFilter === 'all' || item['중분류'] === productFilter;
+        const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter; // 대분류로 필터
+        const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter; // 맛으로 필터
+        const matchPackage = packageFilter === 'all' || item['중분류'] === packageFilter; // 중분류(봉)로 필터
         const matchSearch = searchText === '' ||
                           item['제품명(한국어)'].toLowerCase().includes(searchText) ||
                           item['제품코드'].toLowerCase().includes(searchText);
 
-        return matchWarehouse && matchRegion && matchCategory && matchProduct && matchSearch;
+        return matchWarehouse && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
     });
 
     // 커스텀 정렬 적용
@@ -621,6 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 필터 이벤트
     document.getElementById('warehouseFilter').addEventListener('change', applyFilters);
     document.getElementById('regionFilter').addEventListener('change', applyFilters);
+    document.getElementById('categoryMainFilter').addEventListener('change', applyFilters);
     document.getElementById('categoryFilter').addEventListener('change', applyFilters);
     document.getElementById('productFilter').addEventListener('change', applyFilters);
     document.getElementById('searchInput').addEventListener('input', applyFilters);
