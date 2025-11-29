@@ -159,13 +159,24 @@ function getStockDataFromDrive() {
       const groupKey = `${code}_${shelfLifeRange}`;
 
       if (!groupedData[groupKey]) {
-        // Product ref에서 추가 정보 가져오기 (우선순위: Product Ref만 사용)
+        // Product ref에서 추가 정보 가져오기 (우선순위: Product Ref 사용)
         const refInfo = productRefData[code] || {};
+
+        // 제품라인 기반 대분류 결정
+        const productLine = row[colIndexes.productLine] || '';
+        let categoryMain = refInfo['대분류'] || '';
+
+        // Product ref에 대분류가 없으면 제품라인으로 판단
+        if (!categoryMain || categoryMain === '기타') {
+          if (productLine === 'Amante') categoryMain = '아망테';
+          else if (productLine === 'Chocopie') categoryMain = '초코파이';
+          else categoryMain = '기타';
+        }
 
         groupedData[groupKey] = {
           '제품코드': code,
           '제품명': refInfo['제품명(한국어)'] || refInfo['제품명'] || row[colIndexes.shortName] || row[colIndexes.fullName] || '',
-          '대분류': refInfo['대분류'] || '기타',
+          '대분류': categoryMain,
           '중분류': refInfo['중분류'] || '기타',
           '유통기한': productionDate,
           '보관상태': row[colIndexes.location] || '',
@@ -173,8 +184,8 @@ function getStockDataFromDrive() {
           '재고': 0,
           '유통기한(%)': shelfLifePercent,
           '유통기한구간': shelfLifeRange,
-          '지역': refInfo['지역분류'] || refInfo['지역'] || '기타',
-          '맛': refInfo['구분(맛)'] || refInfo['맛'] || '기타',
+          '지역': refInfo['지역분류'] || refInfo['지역'] || '내수용',
+          '맛': refInfo['구분(맛)'] || refInfo['맛'] || '오리지날',
           '패키지': refInfo['구분(패키지)'] || refInfo['패키지'] || '기타'
         };
       }
