@@ -5,7 +5,7 @@
 // 배포: Apps Script 편집기 > 배포 > 새 배포 > 유형: 웹앱 > 액세스 권한: 모든 사용자
 
 // ⚠️ 중요: 각 스프레드시트/폴더 ID를 여기에 입력하세요
-const STOCK_DB_FOLDER_ID = '1wNmFQVXydCD7Ywxsi6UA2XPtZ5hxNtRS'; // Google Drive의 "Stock DB" 폴더 ID
+const STOCK_DB_FOLDER_ID = '1TElkF4cwH42Iq9526MYcOeCyqEHfaEKx'; // Google Drive의 "Stock DB" 폴더 ID
 const PRODUCT_REF_SPREADSHEET_ID = '1BjLRA823m6ODKcWbgN3UJMQv0CYO77ZmWXmRh1n9CZc'; // "LRKF stock management system_product ref" 스프레드시트 ID
 const ADMIN_SPREADSHEET_ID = '1k2iWG7cZxPxak1bXns4CGCkm2PwS-dLHInd9W4Re-wQ'; // "LRKF stock management system_admin" 스프레드시트 ID
 
