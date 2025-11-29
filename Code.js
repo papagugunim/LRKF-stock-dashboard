@@ -24,12 +24,6 @@ function doGet(e) {
       return createResponse(result.success ? 'success' : 'error', result.message, result.user);
     }
 
-    // 디버깅: 폴더 내용 확인 (인증 불필요)
-    if (action === 'debugFolder') {
-      const data = debugFolderContents();
-      return createResponse('success', '폴더 내용 확인', data);
-    }
-
     // 인증 체크 (로그인 외 모든 요청)
     const authToken = e.parameter.token;
     if (!isValidToken(authToken)) {

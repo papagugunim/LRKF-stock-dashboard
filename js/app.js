@@ -3,7 +3,7 @@
 // ============================================
 
 // Google Apps Script Web App URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbx_lXoqOFVfNuIVGg1JWZWU7-fcSSTfMza47h3z8kNpO3Ez7uno1xJy38AQ6dvv93jrvA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzQntSDsRANd8-nMtifyzCnn-0GvR5r08GheQGYiJa51ZHkQ8DqjVH32NIv6KGSNKGoHw/exec';
 const API_TOKEN = 'lotte-stock-2024'; // Admin 스프레드시트의 API_TOKEN과 일치해야 함
 
 // 로그인 체크
