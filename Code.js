@@ -212,7 +212,7 @@ function getStockDataFromDrive() {
 
         // 제품라인 기반 대분류 결정
         const productLine = row[colIndexes.productLine] || '';
-        let categoryMain = refInfo['대분류'] || '';
+        let categoryMain = refInfo['분류(대분류)'] || '';
 
         // Product ref에 대분류가 없으면 제품라인으로 판단
         if (!categoryMain || categoryMain === '기타') {
@@ -225,16 +225,16 @@ function getStockDataFromDrive() {
           '제품코드': code,
           '제품명': refInfo['제품명'] || row[colIndexes.shortName] || row[colIndexes.fullName] || '',
           '대분류': categoryMain,
-          '중분류': refInfo['중분류'] || '기타',
+          '중분류': '기타',
           '유통기한': productionDate,
           '보관상태': row[colIndexes.location] || '',
           '보관창고': row[colIndexes.warehouse] || '',
           '재고': 0,
           '유통기한(%)': shelfLifePercent,
           '유통기한구간': shelfLifeRange,
-          '지역': refInfo['지역'] || '내수용',
-          '맛': refInfo['맛'] || '오리지날',
-          '패키지': refInfo['패키지'] || '기타',
+          '지역': refInfo['분류(판매지)'] || '내수용',
+          '맛': refInfo['분류(맛)'] || '오리지날',
+          '패키지': refInfo['분류(봉)'] || '기타',
           '생산일자목록': []
         };
       }
@@ -308,6 +308,9 @@ function getProductRefMap() {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
     const rows = data.slice(1);
+
+    // 헤더 정보 로그
+    Logger.log('Product ref 헤더: ' + JSON.stringify(headers));
 
     const productMap = {};
 
@@ -515,6 +518,47 @@ function testGetStockData() {
     }
   } catch (error) {
     Logger.log('테스트 실패: ' + error.toString());
+  }
+}
+
+/**
+ * 테스트 함수 - Product ref 데이터 확인
+ */
+function testProductRefMapping() {
+  Logger.log('=== 테스트 시작 ===');
+
+  try {
+    Logger.log('1. Product ref 데이터 로드 시작');
+    const productRefData = getProductRefMap();
+
+    Logger.log('2. Product ref 데이터 개수: ' + Object.keys(productRefData).length);
+
+    // 샘플 제품코드들 확인
+    const testCodes = ['2141', '2142', '1684', '112', '113'];
+
+    Logger.log('3. 샘플 제품코드 확인 시작');
+    testCodes.forEach(code => {
+      const refInfo = productRefData[code];
+      if (refInfo) {
+        Logger.log('제품코드 ' + code + ': 대분류=' + refInfo['대분류'] + ', 지역=' + refInfo['지역'] + ', 맛=' + refInfo['맛'] + ', 패키지=' + refInfo['패키지']);
+      } else {
+        Logger.log('제품코드 ' + code + ': 매칭 안됨');
+      }
+    });
+
+    // 전체 키 목록 출력 (처음 10개만)
+    const allKeys = Object.keys(productRefData);
+    Logger.log('4. 전체 제품코드 개수: ' + allKeys.length);
+    Logger.log('5. 처음 10개 제품코드: ' + allKeys.slice(0, 10).join(', '));
+
+    Logger.log('=== 테스트 완료 ===');
+    return '테스트 성공: ' + allKeys.length + '개 제품코드 로드됨';
+
+  } catch (error) {
+    Logger.log('=== 에러 발생 ===');
+    Logger.log('에러 메시지: ' + error.toString());
+    Logger.log('에러 스택: ' + error.stack);
+    return '테스트 실패: ' + error.toString();
   }
 }
 
