@@ -24,6 +24,12 @@ function doGet(e) {
       return createResponse(result.success ? 'success' : 'error', result.message, result.user);
     }
 
+    // 디버깅: 폴더 내용 확인 (인증 불필요)
+    if (action === 'debugFolder') {
+      const data = debugFolderContents();
+      return createResponse('success', '폴더 내용 확인', data);
+    }
+
     // 인증 체크 (로그인 외 모든 요청)
     const authToken = e.parameter.token;
     if (!isValidToken(authToken)) {
@@ -504,5 +510,40 @@ function testGetStockData() {
     }
   } catch (error) {
     Logger.log('테스트 실패: ' + error.toString());
+  }
+}
+
+/**
+ * 디버깅용: 폴더 내용 전체 확인
+ */
+function debugFolderContents() {
+  try {
+    const folder = DriveApp.getFolderById(STOCK_DB_FOLDER_ID);
+    const files = folder.getFiles();
+    const result = [];
+
+    while (files.hasNext()) {
+      const file = files.next();
+      result.push({
+        name: file.getName(),
+        id: file.getId(),
+        mimeType: file.getMimeType(),
+        size: file.getSize(),
+        created: file.getDateCreated(),
+        updated: file.getLastUpdated()
+      });
+    }
+
+    return {
+      folderId: STOCK_DB_FOLDER_ID,
+      folderName: folder.getName(),
+      fileCount: result.length,
+      files: result
+    };
+  } catch (error) {
+    return {
+      error: error.toString(),
+      folderId: STOCK_DB_FOLDER_ID
+    };
   }
 }
