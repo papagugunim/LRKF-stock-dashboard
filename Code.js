@@ -223,7 +223,8 @@ function getStockDataFromDrive() {
           '유통기한구간': shelfLifeRange,
           '지역': refInfo['지역분류'] || refInfo['지역'] || '내수용',
           '맛': refInfo['구분(맛)'] || refInfo['맛'] || '오리지날',
-          '패키지': refInfo['구분(패키지)'] || refInfo['패키지'] || '기타'
+          '패키지': refInfo['구분(패키지)'] || refInfo['패키지'] || '기타',
+          '생산일자목록': []
         };
       }
 
