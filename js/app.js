@@ -529,15 +529,18 @@ function updateSummary() {
     const uniqueProductCodes = new Set(filteredData.map(item => item['제품코드']));
     const productCount = uniqueProductCodes.size;
 
-    const avgShelfLife = filteredData.reduce((sum, item) => sum + item.shelfLifeNum, 0) / filteredData.length;
-    // 70% 미만 유통기한의 재고량 합산
+    // 평균 유통기한 계산 (가중 평균: 재고량 고려)
+    const totalWeightedShelfLife = filteredData.reduce((sum, item) => sum + (item.shelfLifeNum * item.stockNum), 0);
+    const avgShelfLife = filteredData.length > 0 ? totalWeightedShelfLife / totalStock : 0;
+
+    // 경고 제품: 80% 미만 유통기한의 재고량 합산
     const warningStock = filteredData
-        .filter(item => item.shelfLifeNum < 70)
+        .filter(item => item.shelfLifeNum < 80)
         .reduce((sum, item) => sum + item.stockNum, 0);
 
     document.getElementById('totalStock').textContent = formatNumber(Math.round(totalStock));
     document.getElementById('productCount').textContent = productCount;
-    document.getElementById('avgShelfLife').textContent = avgShelfLife.toFixed(1);
+    document.getElementById('avgShelfLife').textContent = filteredData.length > 0 ? avgShelfLife.toFixed(1) : '-';
     document.getElementById('warningCount').textContent = formatNumber(Math.round(warningStock));
 }
 
