@@ -51,7 +51,8 @@ function doGet(e) {
 }
 
 /**
- * Google Drive의 Stock DB 폴더에서 최신 YYYYMMDD.xlsx 파일 찾기
+ * Google Drive의 Stock DB 폴더에서 최신 재고 파일 찾기
+ * 지원 형식: 재고raw데이터_YYYYMMDD.xlsx, 재고raw데이터 YYYYMMDD.xlsx, YYYYMMDD.xlsx 등
  */
 function getLatestStockFile() {
   try {
@@ -61,26 +62,49 @@ function getLatestStockFile() {
     let latestFile = null;
     let latestDate = 0;
 
-    // YYYYMMDD.xlsx 형식의 파일 중 가장 최신 파일 찾기
+    // 다양한 파일명 형식에서 날짜 추출 및 최신 파일 찾기
     while (files.hasNext()) {
       const file = files.next();
       const fileName = file.getName();
 
-      // 파일명이 YYYYMMDD.xlsx 형식인지 확인
-      const match = fileName.match(/^(\d{8})\.xlsx$/);
+      Logger.log('파일 확인: ' + fileName);
+
+      let dateNum = 0;
+
+      // 패턴 1: 재고raw데이터_YYYYMMDD.xlsx 또는 재고raw데이터 YYYYMMDD.xlsx
+      let match = fileName.match(/재고raw데이터[_\s]*(\d{8})\.xlsx$/i);
       if (match) {
-        const dateNum = parseInt(match[1]);
-        if (dateNum > latestDate) {
-          latestDate = dateNum;
-          latestFile = file;
+        dateNum = parseInt(match[1]);
+      }
+
+      // 패턴 2: 재고raw데이터_YYYY-MM-DD.xlsx 또는 재고raw데이터 YYYY-MM-DD.xlsx
+      if (!dateNum) {
+        match = fileName.match(/재고raw데이터[_\s]*(\d{4})-(\d{2})-(\d{2})\.xlsx$/i);
+        if (match) {
+          dateNum = parseInt(match[1] + match[2] + match[3]);
         }
+      }
+
+      // 패턴 3: YYYYMMDD.xlsx (기존 형식)
+      if (!dateNum) {
+        match = fileName.match(/^(\d{8})\.xlsx$/);
+        if (match) {
+          dateNum = parseInt(match[1]);
+        }
+      }
+
+      if (dateNum > latestDate) {
+        latestDate = dateNum;
+        latestFile = file;
+        Logger.log('최신 파일 업데이트: ' + fileName + ' (날짜: ' + dateNum + ')');
       }
     }
 
     if (!latestFile) {
-      throw new Error('Stock DB 폴더에 YYYYMMDD.xlsx 형식의 파일이 없습니다.');
+      throw new Error('Stock DB 폴더에 엑셀 파일이 없습니다.');
     }
 
+    Logger.log('선택된 최신 파일: ' + latestFile.getName());
     return latestFile;
   } catch (error) {
     Logger.log('파일 찾기 오류: ' + error.toString());
