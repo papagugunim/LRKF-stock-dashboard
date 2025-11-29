@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Stock DB 폴더 디버깅</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock DB 폴더 디버깅</h1>
+    <button onclick="checkFolder()">폴더 내용 확인</button>
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwoZ6BVfvKwZg4GnVaPvuGHIS1K5bR_ROhcpHQZJk9hLoae0eSgcr4sBrNm9cxq8bttRA/exec';
+
+        async function checkFolder() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = '폴더 내용 확인 중...';
+
+            try {
+                const response = await fetch(`${API_URL}?action=debugFolder`);
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = '오류: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
