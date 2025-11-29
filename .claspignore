@@ -1,0 +1,19 @@
+# Google Apps Script 소스 파일 (Code.js로 복사되므로 제외)
+google-apps-script.js
+google-apps-script-debug.js
+
+# Node modules
+node_modules/
+
+# HTML/CSS/JS 프론트엔드 파일들
+index.html
+css/**
+js/**
+
+# Git 관련
+.git/
+.gitignore
+
+# 기타
+README.md
+.DS_Store
