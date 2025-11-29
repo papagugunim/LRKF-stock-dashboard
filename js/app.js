@@ -651,12 +651,16 @@ function customSort(a, b) {
 
 // 필터링
 function applyFilters() {
+    console.log('applyFilters 호출됨');
+
     const warehouseFilter = document.getElementById('warehouseFilter').value;
     const regionFilter = document.getElementById('regionFilter').value;
     const categoryMainFilter = document.getElementById('categoryMainFilter').value; // 대분류 필터
     const tasteFilter = document.getElementById('categoryFilter').value; // 맛 필터
     const packageFilter = document.getElementById('productFilter').value; // 패키지(봉) 필터
     const searchText = document.getElementById('searchInput').value.toLowerCase();
+
+    console.log('필터 값:', { warehouseFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, searchText });
 
     filteredData = stockData.filter(item => {
         // 재고량이 0인 항목 제외
