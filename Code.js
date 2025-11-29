@@ -57,7 +57,7 @@ function doGet(e) {
 function getLatestStockFile() {
   try {
     const folder = DriveApp.getFolderById(STOCK_DB_FOLDER_ID);
-    const files = folder.getFiles();
+    const files = folder.getFilesByType(MimeType.MICROSOFT_EXCEL);
 
     let latestFile = null;
     let latestDate = 0;
@@ -66,14 +66,8 @@ function getLatestStockFile() {
     while (files.hasNext()) {
       const file = files.next();
       const fileName = file.getName();
-      const mimeType = file.getMimeType();
 
-      // 확장자가 .xlsx로 끝나지 않으면 건너뜀 (대소문자 무시)
-      if (!fileName.toLowerCase().endsWith('.xlsx')) {
-        continue;
-      }
-
-      Logger.log('파일 확인: ' + fileName + ' (MIME: ' + mimeType + ')');
+      Logger.log('파일 확인: ' + fileName);
 
       let dateNum = 0;
 
