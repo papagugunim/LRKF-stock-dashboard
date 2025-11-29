@@ -223,7 +223,7 @@ function getStockDataFromDrive() {
 
         groupedData[groupKey] = {
           '제품코드': code,
-          '제품명': refInfo['제품명(한국어)'] || refInfo['제품명'] || row[colIndexes.shortName] || row[colIndexes.fullName] || '',
+          '제품명': refInfo['제품명'] || row[colIndexes.shortName] || row[colIndexes.fullName] || '',
           '대분류': categoryMain,
           '중분류': refInfo['중분류'] || '기타',
           '유통기한': productionDate,
@@ -232,9 +232,9 @@ function getStockDataFromDrive() {
           '재고': 0,
           '유통기한(%)': shelfLifePercent,
           '유통기한구간': shelfLifeRange,
-          '지역': refInfo['지역분류'] || refInfo['지역'] || '내수용',
-          '맛': refInfo['구분(맛)'] || refInfo['맛'] || '오리지날',
-          '패키지': refInfo['구분(패키지)'] || refInfo['패키지'] || '기타',
+          '지역': refInfo['지역'] || '내수용',
+          '맛': refInfo['맛'] || '오리지날',
+          '패키지': refInfo['패키지'] || '기타',
           '생산일자목록': []
         };
       }
