@@ -109,10 +109,23 @@ function getStockDataFromDrive() {
 
     // 임시 스프레드시트 열기
     const spreadsheet = SpreadsheetApp.openById(tempFile.id);
-    const sheet = spreadsheet.getSheetByName('DB');
+
+    // 사용 가능한 시트 목록 확인
+    const sheets = spreadsheet.getSheets();
+    const sheetNames = sheets.map(s => s.getName());
+    Logger.log('사용 가능한 시트: ' + sheetNames.join(', '));
+
+    // 'DB' 시트 찾기
+    let sheet = spreadsheet.getSheetByName('DB');
+
+    // 'DB' 시트가 없으면 첫 번째 시트 사용
+    if (!sheet) {
+      Logger.log('DB 시트를 찾을 수 없음. 첫 번째 시트 사용: ' + sheetNames[0]);
+      sheet = sheets[0];
+    }
 
     if (!sheet) {
-      throw new Error('DB 시트를 찾을 수 없습니다.');
+      throw new Error('시트를 찾을 수 없습니다. 사용 가능한 시트: ' + sheetNames.join(', '));
     }
 
     // 데이터 읽기
