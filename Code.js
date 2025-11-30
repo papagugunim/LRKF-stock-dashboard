@@ -264,6 +264,7 @@ function getStockDataFromDrive() {
           '지역': refInfo['브랜드'] || '내수용',
           '맛': refInfo['맛'] || '오리지날',
           '패키지': refInfo['패키지'] || '기타',
+          '비고': refInfo['비고'] || '',
           '생산일자목록': []
         };
       }

@@ -658,7 +658,7 @@ function renderTable() {
     const pageData = filteredData.slice(startIndex, endIndex);
 
     if (pageData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
         return;
     }
 
@@ -670,6 +670,7 @@ function renderTable() {
             <td>${item['지역'] || '-'}</td>
             <td>${item['맛'] || '-'}</td>
             <td>${item['패키지'] || '-'}</td>
+            <td>${item['비고'] || '-'}</td>
             <td>${getStatusBadge(item['보관상태'])}</td>
             <td><span class="stock-number">${formatNumber(Math.round(item.stockNum))}</span></td>
             <td>${getShelfLifeBadge(item['유통기한구간'], item.shelfLifeNum)}</td>
@@ -789,6 +790,7 @@ function sortTable(column) {
         'region': '지역',
         'taste': '맛',
         'package': '패키지',
+        'note': '비고',
         'status': '보관상태',
         'stock': 'stockNum',
         'shelfLife': '유통기한구간'
