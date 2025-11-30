@@ -78,6 +78,12 @@ function doGet(e) {
       return createResponse('success', '패키지 목록 로드 성공', data);
     }
 
+    // 비고 목록 가져오기 (Product ref H열에서)
+    if (action === 'getNotes') {
+      const data = getCategoryList('비고');
+      return createResponse('success', '비고 목록 로드 성공', data);
+    }
+
     // 재고 현황 데이터 가져오기 (Google Drive의 최신 YYYYMMDD.xlsx 파일에서)
     if (action === 'getStock') {
       const data = getStockDataFromDrive();

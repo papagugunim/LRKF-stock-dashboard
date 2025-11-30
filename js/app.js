@@ -448,6 +448,10 @@ async function loadSalesRegionFilter() {
     await loadFilterOptions('getSalesRegion', 'salesRegionFilter', '판매지');
 }
 
+async function loadNoteFilter() {
+    await loadFilterOptions('getNotes', 'noteFilter', '비고');
+}
+
 // 모든 필터 동시 로드
 async function loadAllFilters() {
     // 초기에는 Product ref에서 모든 옵션 로드하지 않고
@@ -466,6 +470,7 @@ function updateDependentFilters() {
     const categoryMainFilter = document.getElementById('categoryMainFilter').value;
     const regionFilter = document.getElementById('regionFilter').value;
     const tasteFilter = document.getElementById('categoryFilter').value;
+    const packageFilter = document.getElementById('productFilter').value;
 
     // 각 필터별로 사용 가능한 옵션 추출 및 업데이트
 
@@ -530,6 +535,20 @@ function updateDependentFilters() {
         return matchWarehouse && matchCPNCP && matchSalesRegion && matchCategoryMain && matchRegion && matchTaste;
     });
     updateFilterOptions('productFilter', packageData, '패키지');
+
+    // 비고 필터 (보관창고, CP/NCP, 판매지, 카테고리, 브랜드, 맛, 패키지에 종속)
+    let noteData = stockData.filter(item => {
+        if (item.stockNum <= 1) return false;
+        const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
+        const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
+        const matchSalesRegion = salesRegionFilter === 'all' || item['판매지'] === salesRegionFilter;
+        const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
+        const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
+        const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter;
+        const matchPackage = packageFilter === 'all' || item['패키지'] === packageFilter;
+        return matchWarehouse && matchCPNCP && matchSalesRegion && matchCategoryMain && matchRegion && matchTaste && matchPackage;
+    });
+    updateFilterOptions('noteFilter', noteData, '비고');
 }
 
 // 필터 옵션 업데이트 헬퍼 함수
@@ -577,6 +596,7 @@ function setupFilterListeners() {
     document.getElementById('categoryMainFilter').removeEventListener('change', handleFilterChange);
     document.getElementById('categoryFilter').removeEventListener('change', handleFilterChange);
     document.getElementById('productFilter').removeEventListener('change', handleFilterChange);
+    document.getElementById('noteFilter').removeEventListener('change', handleFilterChange);
     document.getElementById('searchInput').removeEventListener('input', applyFilters);
     document.getElementById('resetFiltersBtn').removeEventListener('click', resetFilters);
 
@@ -588,6 +608,7 @@ function setupFilterListeners() {
     document.getElementById('categoryMainFilter').addEventListener('change', handleFilterChange);
     document.getElementById('categoryFilter').addEventListener('change', handleFilterChange);
     document.getElementById('productFilter').addEventListener('change', handleFilterChange);
+    document.getElementById('noteFilter').addEventListener('change', handleFilterChange);
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
 
@@ -850,9 +871,10 @@ function applyFilters() {
     const categoryMainFilter = document.getElementById('categoryMainFilter').value; // 대분류 필터
     const tasteFilter = document.getElementById('categoryFilter').value; // 맛 필터
     const packageFilter = document.getElementById('productFilter').value; // 패키지(봉) 필터
+    const noteFilter = document.getElementById('noteFilter').value; // 비고 필터
     const searchText = document.getElementById('searchInput').value.toLowerCase();
 
-    console.log('필터 값:', { warehouseFilter, cpncpFilter, salesRegionFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, searchText });
+    console.log('필터 값:', { warehouseFilter, cpncpFilter, salesRegionFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, noteFilter, searchText });
 
     filteredData = stockData.filter(item => {
         // 재고량이 1 이하인 항목 제외 (소수점 재고 포함)
@@ -865,11 +887,12 @@ function applyFilters() {
         const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
         const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter;
         const matchPackage = packageFilter === 'all' || item['패키지'] === packageFilter;
+        const matchNote = noteFilter === 'all' || item['비고'] === noteFilter;
         const matchSearch = searchText === '' ||
             item['제품명'].toLowerCase().includes(searchText) ||
             item['제품코드'].toLowerCase().includes(searchText);
 
-        return matchWarehouse && matchCPNCP && matchSalesRegion && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
+        return matchWarehouse && matchCPNCP && matchSalesRegion && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchNote && matchSearch;
     });
 
     // 커스텀 정렬 적용
@@ -892,6 +915,7 @@ function resetFilters() {
     document.getElementById('categoryMainFilter').value = 'all';
     document.getElementById('categoryFilter').value = 'all';
     document.getElementById('productFilter').value = 'all';
+    document.getElementById('noteFilter').value = 'all';
 
     // 검색 입력 초기화
     document.getElementById('searchInput').value = '';
