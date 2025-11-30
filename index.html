@@ -102,6 +102,13 @@
                 </select>
             </div>
             <div class="filter-group">
+                <label>판매지:</label>
+                <select id="salesRegionFilter">
+                    <option value="all">전체</option>
+                    <!-- Product ref에서 동적으로 로드됨 -->
+                </select>
+            </div>
+            <div class="filter-group">
                 <label>카테고리:</label>
                 <select id="categoryMainFilter">
                     <option value="all">전체</option>
@@ -144,6 +151,7 @@
                     <tr>
                         <th class="sortable" data-column="code">제품코드</th>
                         <th class="sortable" data-column="cpncp">CP/NCP</th>
+                        <th class="sortable" data-column="salesRegion">판매지</th>
                         <th class="sortable" data-column="categoryMain">카테고리</th>
                         <th class="sortable" data-column="region">브랜드</th>
                         <th class="sortable" data-column="taste">맛</th>
@@ -155,7 +163,7 @@
                     </tr>
                 </thead>
                 <tbody id="stockTableBody">
-                    <!-- 데이터가 JavaScript로 삽입됩니다 -->
+                    <!-- 데이터가 JavaScript로 삽입됩니다 (11개 열) -->
                 </tbody>
             </table>
         </div>

@@ -48,25 +48,31 @@ function doGet(e) {
       return createResponse('success', 'CP/NCP 목록 로드 성공', data);
     }
 
-    // 카테고리 목록 가져오기 (Product ref C열에서)
+    // 판매지 목록 가져오기 (Product ref C열에서)
+    if (action === 'getSalesRegion') {
+      const data = getCategoryList('판매지');
+      return createResponse('success', '판매지 목록 로드 성공', data);
+    }
+
+    // 카테고리 목록 가져오기 (Product ref D열에서)
     if (action === 'getCategoryMain') {
       const data = getCategoryMainList();
       return createResponse('success', '카테고리 목록 로드 성공', data);
     }
 
-    // 브랜드 목록 가져오기 (Product ref D열에서)
+    // 브랜드 목록 가져오기 (Product ref E열에서)
     if (action === 'getCategoryRegion') {
       const data = getCategoryList('브랜드');
       return createResponse('success', '브랜드 목록 로드 성공', data);
     }
 
-    // 맛 목록 가져오기 (Product ref E열에서)
+    // 맛 목록 가져오기 (Product ref F열에서)
     if (action === 'getCategoryTaste') {
       const data = getCategoryList('맛');
       return createResponse('success', '맛 목록 로드 성공', data);
     }
 
-    // 패키지 목록 가져오기 (Product ref F열에서)
+    // 패키지 목록 가져오기 (Product ref G열에서)
     if (action === 'getCategoryPackage') {
       const data = getCategoryList('패키지');
       return createResponse('success', '패키지 목록 로드 성공', data);
@@ -258,6 +264,7 @@ function getStockDataFromDrive() {
         groupedData[groupKey] = {
           '제품코드': code,
           'CP/NCP': refInfo['CP/NCP'] || '-',
+          '판매지': refInfo['판매지'] || '내수용',
           '제품명': refInfo['제품명'] || row[colIndexes.shortName] || row[colIndexes.fullName] || '',
           '대분류': categoryMain,
           '중분류': '기타',

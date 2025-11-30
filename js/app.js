@@ -444,6 +444,10 @@ async function loadCPNCPFilter() {
     await loadFilterOptions('getCPNCP', 'cpncpFilter', 'CP/NCP');
 }
 
+async function loadSalesRegionFilter() {
+    await loadFilterOptions('getSalesRegion', 'salesRegionFilter', '판매지');
+}
+
 // 모든 필터 동시 로드
 async function loadAllFilters() {
     // 초기에는 Product ref에서 모든 옵션 로드하지 않고
@@ -458,22 +462,10 @@ function updateDependentFilters() {
     // 현재 선택된 필터 값 가져오기
     const warehouseFilter = document.getElementById('warehouseFilter').value;
     const cpncpFilter = document.getElementById('cpncpFilter').value;
+    const salesRegionFilter = document.getElementById('salesRegionFilter').value;
     const categoryMainFilter = document.getElementById('categoryMainFilter').value;
     const regionFilter = document.getElementById('regionFilter').value;
     const tasteFilter = document.getElementById('categoryFilter').value;
-
-    // 현재 선택된 필터에 맞는 데이터만 추출
-    let availableData = stockData.filter(item => {
-        if (item.stockNum <= 1) return false;
-
-        const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
-        const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
-        const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
-        const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
-        const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter;
-
-        return matchWarehouse && matchCPNCP && matchCategoryMain && matchRegion && matchTaste;
-    });
 
     // 각 필터별로 사용 가능한 옵션 추출 및 업데이트
 
@@ -484,45 +476,58 @@ function updateDependentFilters() {
     });
     updateFilterOptions('cpncpFilter', cpncpData, 'CP/NCP');
 
-    // 카테고리 필터 (보관창고, CP/NCP에 종속)
-    let categoryData = stockData.filter(item => {
+    // 판매지 필터 (보관창고, CP/NCP에 종속)
+    let salesRegionData = stockData.filter(item => {
         if (item.stockNum <= 1) return false;
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
         return matchWarehouse && matchCPNCP;
     });
+    updateFilterOptions('salesRegionFilter', salesRegionData, '판매지');
+
+    // 카테고리 필터 (보관창고, CP/NCP, 판매지에 종속)
+    let categoryData = stockData.filter(item => {
+        if (item.stockNum <= 1) return false;
+        const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
+        const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
+        const matchSalesRegion = salesRegionFilter === 'all' || item['판매지'] === salesRegionFilter;
+        return matchWarehouse && matchCPNCP && matchSalesRegion;
+    });
     updateFilterOptions('categoryMainFilter', categoryData, '대분류');
 
-    // 브랜드 필터 (보관창고, CP/NCP, 카테고리에 종속)
+    // 브랜드 필터 (보관창고, CP/NCP, 판매지, 카테고리에 종속)
     let regionData = stockData.filter(item => {
         if (item.stockNum <= 1) return false;
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
+        const matchSalesRegion = salesRegionFilter === 'all' || item['판매지'] === salesRegionFilter;
         const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
-        return matchWarehouse && matchCPNCP && matchCategoryMain;
+        return matchWarehouse && matchCPNCP && matchSalesRegion && matchCategoryMain;
     });
     updateFilterOptions('regionFilter', regionData, '지역');
 
-    // 맛 필터 (보관창고, CP/NCP, 카테고리, 브랜드에 종속)
+    // 맛 필터 (보관창고, CP/NCP, 판매지, 카테고리, 브랜드에 종속)
     let tasteData = stockData.filter(item => {
         if (item.stockNum <= 1) return false;
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
+        const matchSalesRegion = salesRegionFilter === 'all' || item['판매지'] === salesRegionFilter;
         const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
         const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
-        return matchWarehouse && matchCPNCP && matchCategoryMain && matchRegion;
+        return matchWarehouse && matchCPNCP && matchSalesRegion && matchCategoryMain && matchRegion;
     });
     updateFilterOptions('categoryFilter', tasteData, '맛');
 
-    // 패키지 필터 (보관창고, CP/NCP, 카테고리, 브랜드, 맛에 종속)
+    // 패키지 필터 (보관창고, CP/NCP, 판매지, 카테고리, 브랜드, 맛에 종속)
     let packageData = stockData.filter(item => {
         if (item.stockNum <= 1) return false;
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
+        const matchSalesRegion = salesRegionFilter === 'all' || item['판매지'] === salesRegionFilter;
         const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
         const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
         const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter;
-        return matchWarehouse && matchCPNCP && matchCategoryMain && matchRegion && matchTaste;
+        return matchWarehouse && matchCPNCP && matchSalesRegion && matchCategoryMain && matchRegion && matchTaste;
     });
     updateFilterOptions('productFilter', packageData, '패키지');
 }
@@ -567,6 +572,7 @@ function setupFilterListeners() {
     // 기존 리스너 제거
     document.getElementById('warehouseFilter').removeEventListener('change', handleFilterChange);
     document.getElementById('cpncpFilter').removeEventListener('change', handleFilterChange);
+    document.getElementById('salesRegionFilter').removeEventListener('change', handleFilterChange);
     document.getElementById('regionFilter').removeEventListener('change', handleFilterChange);
     document.getElementById('categoryMainFilter').removeEventListener('change', handleFilterChange);
     document.getElementById('categoryFilter').removeEventListener('change', handleFilterChange);
@@ -577,6 +583,7 @@ function setupFilterListeners() {
     // 새 리스너 등록
     document.getElementById('warehouseFilter').addEventListener('change', handleFilterChange);
     document.getElementById('cpncpFilter').addEventListener('change', handleFilterChange);
+    document.getElementById('salesRegionFilter').addEventListener('change', handleFilterChange);
     document.getElementById('regionFilter').addEventListener('change', handleFilterChange);
     document.getElementById('categoryMainFilter').addEventListener('change', handleFilterChange);
     document.getElementById('categoryFilter').addEventListener('change', handleFilterChange);
@@ -772,7 +779,7 @@ function renderTable() {
     const pageData = filteredData.slice(startIndex, endIndex);
 
     if (pageData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
         return;
     }
 
@@ -780,6 +787,7 @@ function renderTable() {
         <tr>
             <td>${item['제품코드']}</td>
             <td>${item['CP/NCP'] || '-'}</td>
+            <td>${item['판매지'] || '-'}</td>
             <td>${item['대분류'] || '-'}</td>
             <td>${item['지역'] || '-'}</td>
             <td>${item['맛'] || '-'}</td>
@@ -837,13 +845,14 @@ function applyFilters() {
 
     const warehouseFilter = document.getElementById('warehouseFilter').value;
     const cpncpFilter = document.getElementById('cpncpFilter').value;
+    const salesRegionFilter = document.getElementById('salesRegionFilter').value;
     const regionFilter = document.getElementById('regionFilter').value;
     const categoryMainFilter = document.getElementById('categoryMainFilter').value; // 대분류 필터
     const tasteFilter = document.getElementById('categoryFilter').value; // 맛 필터
     const packageFilter = document.getElementById('productFilter').value; // 패키지(봉) 필터
     const searchText = document.getElementById('searchInput').value.toLowerCase();
 
-    console.log('필터 값:', { warehouseFilter, cpncpFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, searchText });
+    console.log('필터 값:', { warehouseFilter, cpncpFilter, salesRegionFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, searchText });
 
     filteredData = stockData.filter(item => {
         // 재고량이 1 이하인 항목 제외 (소수점 재고 포함)
@@ -851,6 +860,7 @@ function applyFilters() {
 
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
+        const matchSalesRegion = salesRegionFilter === 'all' || item['판매지'] === salesRegionFilter;
         const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
         const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
         const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter;
@@ -859,7 +869,7 @@ function applyFilters() {
             item['제품명'].toLowerCase().includes(searchText) ||
             item['제품코드'].toLowerCase().includes(searchText);
 
-        return matchWarehouse && matchCPNCP && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
+        return matchWarehouse && matchCPNCP && matchSalesRegion && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
     });
 
     // 커스텀 정렬 적용
@@ -877,6 +887,7 @@ function resetFilters() {
     // 모든 select 필터를 "전체"로 초기화
     document.getElementById('warehouseFilter').value = 'LProduct';
     document.getElementById('cpncpFilter').value = 'all';
+    document.getElementById('salesRegionFilter').value = 'all';
     document.getElementById('regionFilter').value = 'all';
     document.getElementById('categoryMainFilter').value = 'all';
     document.getElementById('categoryFilter').value = 'all';
@@ -906,6 +917,7 @@ function sortTable(column) {
     const columnMap = {
         'code': '제품코드',
         'cpncp': 'CP/NCP',
+        'salesRegion': '판매지',
         'categoryMain': '대분류',
         'region': '지역',
         'taste': '맛',
