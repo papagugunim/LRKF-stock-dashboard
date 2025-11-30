@@ -42,28 +42,28 @@ function doGet(e) {
       return createResponse('success', '제품코드 데이터 로드 성공', data);
     }
 
-    // 대분류 목록 가져오기 (Product ref B열에서)
+    // 카테고리 목록 가져오기 (Product ref C열에서)
     if (action === 'getCategoryMain') {
       const data = getCategoryMainList();
-      return createResponse('success', '대분류 목록 로드 성공', data);
+      return createResponse('success', '카테고리 목록 로드 성공', data);
     }
 
-    // 판매지 목록 가져오기 (Product ref C열에서)
+    // 브랜드 목록 가져오기 (Product ref D열에서)
     if (action === 'getCategoryRegion') {
-      const data = getCategoryList('분류(판매지)');
-      return createResponse('success', '판매지 목록 로드 성공', data);
+      const data = getCategoryList('브랜드');
+      return createResponse('success', '브랜드 목록 로드 성공', data);
     }
 
-    // 맛 목록 가져오기 (Product ref D열에서)
+    // 맛 목록 가져오기 (Product ref E열에서)
     if (action === 'getCategoryTaste') {
-      const data = getCategoryList('분류(맛)');
+      const data = getCategoryList('맛');
       return createResponse('success', '맛 목록 로드 성공', data);
     }
 
-    // 봉 목록 가져오기 (Product ref E열에서)
+    // 패키지 목록 가져오기 (Product ref F열에서)
     if (action === 'getCategoryPackage') {
-      const data = getCategoryList('분류(봉)');
-      return createResponse('success', '봉 목록 로드 성공', data);
+      const data = getCategoryList('패키지');
+      return createResponse('success', '패키지 목록 로드 성공', data);
     }
 
     // 재고 현황 데이터 가져오기 (Google Drive의 최신 YYYYMMDD.xlsx 파일에서)
@@ -240,9 +240,9 @@ function getStockDataFromDrive() {
 
         // 제품라인 기반 대분류 결정
         const productLine = row[colIndexes.productLine] || '';
-        let categoryMain = refInfo['분류(대분류)'] || '';
+        let categoryMain = refInfo['카테고리'] || '';
 
-        // Product ref에 대분류가 없으면 제품라인으로 판단
+        // Product ref에 카테고리가 없으면 제품라인으로 판단
         if (!categoryMain || categoryMain === '기타') {
           if (productLine === 'Amante') categoryMain = '아망테';
           else if (productLine === 'Chocopie') categoryMain = '초코파이';
@@ -260,9 +260,9 @@ function getStockDataFromDrive() {
           '재고': 0,
           '유통기한(%)': shelfLifePercent,
           '유통기한구간': shelfLifeRange,
-          '지역': refInfo['분류(판매지)'] || '내수용',
-          '맛': refInfo['분류(맛)'] || '오리지날',
-          '패키지': refInfo['분류(봉)'] || '기타',
+          '지역': refInfo['브랜드'] || '내수용',
+          '맛': refInfo['맛'] || '오리지날',
+          '패키지': refInfo['패키지'] || '기타',
           '생산일자목록': []
         };
       }
@@ -392,10 +392,10 @@ function getProductCodesData() {
 }
 
 /**
- * Product ref에서 대분류 목록 가져오기 (B열)
+ * Product ref에서 카테고리 목록 가져오기 (C열)
  */
 function getCategoryMainList() {
-  return getCategoryList('분류(대분류)');
+  return getCategoryList('카테고리');
 }
 
 /**
