@@ -750,6 +750,8 @@ function resetFilters() {
 
 // 정렬
 function sortTable(column) {
+    console.log('정렬 클릭:', column);
+
     if (sortColumn === column) {
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -774,17 +776,23 @@ function sortTable(column) {
         let aVal = a[sortKey];
         let bVal = b[sortKey];
 
+        // null/undefined 처리
+        if (aVal == null) aVal = '';
+        if (bVal == null) bVal = '';
+
+        // 숫자 정렬
         if (typeof aVal === 'number' && typeof bVal === 'number') {
             return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
         }
 
-        aVal = aVal.toString();
-        bVal = bVal.toString();
+        // 문자열 정렬
+        const aStr = aVal.toString();
+        const bStr = bVal.toString();
 
         if (sortDirection === 'asc') {
-            return aVal.localeCompare(bVal);
+            return aStr.localeCompare(bStr);
         } else {
-            return bVal.localeCompare(aVal);
+            return bStr.localeCompare(aStr);
         }
     });
 
