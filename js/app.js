@@ -440,9 +440,14 @@ async function loadCategoryPackageFilter() {
     await loadFilterOptions('getCategoryPackage', 'productFilter', '봉');
 }
 
+async function loadCPNCPFilter() {
+    await loadFilterOptions('getCPNCP', 'cpncpFilter', 'CP/NCP');
+}
+
 // 모든 필터 동시 로드
 async function loadAllFilters() {
     await Promise.all([
+        loadCPNCPFilter(),
         loadCategoryMainFilter(),
         loadCategoryRegionFilter(),
         loadCategoryTasteFilter(),
@@ -457,6 +462,7 @@ async function loadAllFilters() {
 function setupFilterListeners() {
     // 기존 리스너 제거
     document.getElementById('warehouseFilter').removeEventListener('change', applyFilters);
+    document.getElementById('cpncpFilter').removeEventListener('change', applyFilters);
     document.getElementById('regionFilter').removeEventListener('change', applyFilters);
     document.getElementById('categoryMainFilter').removeEventListener('change', applyFilters);
     document.getElementById('categoryFilter').removeEventListener('change', applyFilters);
@@ -466,6 +472,7 @@ function setupFilterListeners() {
 
     // 새 리스너 등록
     document.getElementById('warehouseFilter').addEventListener('change', applyFilters);
+    document.getElementById('cpncpFilter').addEventListener('change', applyFilters);
     document.getElementById('regionFilter').addEventListener('change', applyFilters);
     document.getElementById('categoryMainFilter').addEventListener('change', applyFilters);
     document.getElementById('categoryFilter').addEventListener('change', applyFilters);
@@ -607,7 +614,7 @@ function getShelfLifeBadge(shelfLifeRange, shelfLifeNum) {
 
     if (shelfLifeNum < 60) {
         className = 'shelf-life-danger';
-        emoji = '⚠️ ';
+        emoji = ' ⚠️';
     } else if (shelfLifeNum < 80) {
         className = 'shelf-life-warning';
         emoji = '';
@@ -616,7 +623,7 @@ function getShelfLifeBadge(shelfLifeRange, shelfLifeNum) {
         emoji = '';
     }
 
-    return `<span class="shelf-life-badge ${className}">${emoji}${shelfLifeRange}</span>`;
+    return `<span class="shelf-life-badge ${className}">${shelfLifeRange}${emoji}</span>`;
 }
 
 // 재고 바 차트 생성
@@ -722,19 +729,21 @@ function applyFilters() {
     console.log('applyFilters 호출됨');
 
     const warehouseFilter = document.getElementById('warehouseFilter').value;
+    const cpncpFilter = document.getElementById('cpncpFilter').value;
     const regionFilter = document.getElementById('regionFilter').value;
     const categoryMainFilter = document.getElementById('categoryMainFilter').value; // 대분류 필터
     const tasteFilter = document.getElementById('categoryFilter').value; // 맛 필터
     const packageFilter = document.getElementById('productFilter').value; // 패키지(봉) 필터
     const searchText = document.getElementById('searchInput').value.toLowerCase();
 
-    console.log('필터 값:', { warehouseFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, searchText });
+    console.log('필터 값:', { warehouseFilter, cpncpFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, searchText });
 
     filteredData = stockData.filter(item => {
         // 재고량이 1 이하인 항목 제외 (소수점 재고 포함)
         if (item.stockNum <= 1) return false;
 
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
+        const matchCPNCP = cpncpFilter === 'all' || item['CP/NCP'] === cpncpFilter;
         const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;
         const matchCategoryMain = categoryMainFilter === 'all' || item['대분류'] === categoryMainFilter;
         const matchTaste = tasteFilter === 'all' || item['맛'] === tasteFilter;
@@ -743,7 +752,7 @@ function applyFilters() {
             item['제품명'].toLowerCase().includes(searchText) ||
             item['제품코드'].toLowerCase().includes(searchText);
 
-        return matchWarehouse && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
+        return matchWarehouse && matchCPNCP && matchRegion && matchCategoryMain && matchTaste && matchPackage && matchSearch;
     });
 
     // 커스텀 정렬 적용
@@ -760,6 +769,7 @@ function resetFilters() {
 
     // 모든 select 필터를 "전체"로 초기화
     document.getElementById('warehouseFilter').value = 'LProduct';
+    document.getElementById('cpncpFilter').value = 'all';
     document.getElementById('regionFilter').value = 'all';
     document.getElementById('categoryMainFilter').value = 'all';
     document.getElementById('categoryFilter').value = 'all';

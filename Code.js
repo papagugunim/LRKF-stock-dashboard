@@ -42,6 +42,12 @@ function doGet(e) {
       return createResponse('success', '제품코드 데이터 로드 성공', data);
     }
 
+    // CP/NCP 목록 가져오기 (Product ref B열에서)
+    if (action === 'getCPNCP') {
+      const data = getCategoryList('CP/NCP');
+      return createResponse('success', 'CP/NCP 목록 로드 성공', data);
+    }
+
     // 카테고리 목록 가져오기 (Product ref C열에서)
     if (action === 'getCategoryMain') {
       const data = getCategoryMainList();
