@@ -513,14 +513,8 @@ async function loadStockData() {
             // 백엔드에서 이미 그룹화되고 Product ref가 병합된 데이터를 받음
             // 필요한 숫자 필드만 추가 파싱
             stockData = stockArray.map(item => {
-                // 유통기한 구간을 숫자로 변환 (필터링 및 정렬용)
-                const shelfLifeRange = item['유통기한구간'] || '';
-                let shelfLifeNum = 85; // 기본값
-
-                if (shelfLifeRange.includes('90% 이상')) shelfLifeNum = 95;
-                else if (shelfLifeRange.includes('80~90%')) shelfLifeNum = 85;
-                else if (shelfLifeRange.includes('70~80%')) shelfLifeNum = 75;
-                else if (shelfLifeRange.includes('70% 미만')) shelfLifeNum = 65;
+                // 백엔드에서 보낸 실제 유통기한(%) 값을 사용
+                const shelfLifeNum = parseFloat(item['유통기한(%)']) || 0;
 
                 return {
                     ...item,
