@@ -307,8 +307,24 @@ function getStockDataFromDrive() {
     // 임시 파일 삭제
     DriveApp.getFileById(tempFile.id).setTrashed(true);
 
-    Logger.log(`데이터 변환 완료: ${result.length}개 항목`);
-    return result;
+    // 파일 정보 추출
+    const fileName = file.getName();
+    let fileDate = '';
+
+    // 파일명에서 날짜 추출 (YYYYMMDD 형식)
+    const match = fileName.match(/(\d{8})/);
+    if (match) {
+      fileDate = match[1];
+    }
+
+    Logger.log(`데이터 변환 완료: ${result.length}개 항목, 파일: ${fileName}`);
+
+    return {
+      data: result,
+      fileName: fileName,
+      fileDate: fileDate,
+      sheetName: sheet.getName()
+    };
 
   } catch (error) {
     Logger.log('재고 데이터 로드 오류: ' + error.toString());
