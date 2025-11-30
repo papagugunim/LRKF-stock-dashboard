@@ -527,8 +527,8 @@ async function loadStockData() {
                 };
             });
 
-            // 재고량이 0인 항목 제외
-            stockData = stockData.filter(item => item.stockNum > 0);
+            // 재고량이 1 이하인 항목 제외 (소수점 재고 포함)
+            stockData = stockData.filter(item => item.stockNum > 1);
 
             // 초기 로드 시 필터 적용 (기본값: LProduct)
             applyFilters();
@@ -713,8 +713,8 @@ function applyFilters() {
     console.log('필터 값:', { warehouseFilter, regionFilter, categoryMainFilter, tasteFilter, packageFilter, searchText });
 
     filteredData = stockData.filter(item => {
-        // 재고량이 0인 항목 제외
-        if (item.stockNum <= 0) return false;
+        // 재고량이 1 이하인 항목 제외 (소수점 재고 포함)
+        if (item.stockNum <= 1) return false;
 
         const matchWarehouse = warehouseFilter === 'all' || item['보관창고'] === warehouseFilter;
         const matchRegion = regionFilter === 'all' || item['지역'] === regionFilter;

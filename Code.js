@@ -219,8 +219,8 @@ function getStockDataFromDrive() {
       const code = row[colIndexes.code].toString();
       const stock = parseFloat(row[colIndexes.stock]) || 0;
 
-      // 재고량이 0 이하인 항목 제외
-      if (stock <= 0) return;
+      // 재고량이 1 이하인 항목 제외 (소수점 재고 포함)
+      if (stock <= 1) return;
 
       const shelfLifePercent = parseFloat(row[colIndexes.shelfLife]) || 0;
       const batchNumber = row[colIndexes.batchNumber] ? row[colIndexes.batchNumber].toString() : '';
@@ -276,9 +276,9 @@ function getStockDataFromDrive() {
       }
     });
 
-    // 배열로 변환 (재고가 0보다 큰 항목만)
+    // 배열로 변환 (재고가 1보다 큰 항목만)
     Object.values(groupedData).forEach(item => {
-      if (item['재고'] > 0) {
+      if (item['재고'] > 1) {
         result.push(item);
       }
     });
