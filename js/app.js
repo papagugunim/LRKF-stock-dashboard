@@ -658,13 +658,14 @@ function renderTable() {
     const pageData = filteredData.slice(startIndex, endIndex);
 
     if (pageData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
         return;
     }
 
     tableBody.innerHTML = pageData.map(item => `
         <tr>
             <td>${item['제품코드']}</td>
+            <td>${item['CP/NCP'] || '-'}</td>
             <td>${item['대분류'] || '-'}</td>
             <td>${item['지역'] || '-'}</td>
             <td>${item['맛'] || '-'}</td>
@@ -783,6 +784,7 @@ function sortTable(column) {
 
     const columnMap = {
         'code': '제품코드',
+        'cpncp': 'CP/NCP',
         'categoryMain': '대분류',
         'region': '지역',
         'taste': '맛',

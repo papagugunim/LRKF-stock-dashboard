@@ -251,6 +251,7 @@ function getStockDataFromDrive() {
 
         groupedData[groupKey] = {
           '제품코드': code,
+          'CP/NCP': refInfo['CP/NCP'] || '-',
           '제품명': refInfo['제품명'] || row[colIndexes.shortName] || row[colIndexes.fullName] || '',
           '대분류': categoryMain,
           '중분류': '기타',
