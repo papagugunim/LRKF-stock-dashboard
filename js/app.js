@@ -644,13 +644,9 @@ async function loadStockData() {
                 stockArray = responseData;
             }
 
-            // 파일 날짜 정보 표시
-            if (fileInfo && fileInfo.fileDate) {
-                const year = fileInfo.fileDate.substring(0, 4);
-                const month = fileInfo.fileDate.substring(4, 6);
-                const day = fileInfo.fileDate.substring(6, 8);
-                const formattedDate = `${year}-${month}-${day}`;
-                document.getElementById('dataFileName').textContent = `${formattedDate} (${fileInfo.fileName})`;
+            // 파일 이름 표시
+            if (fileInfo && fileInfo.fileName) {
+                document.getElementById('dataFileName').textContent = fileInfo.fileName;
             }
 
             // 백엔드에서 이미 그룹화되고 Product ref가 병합된 데이터를 받음
