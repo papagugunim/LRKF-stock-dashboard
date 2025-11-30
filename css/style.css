@@ -260,6 +260,24 @@ td {
     color: #721c24;
 }
 
+/* 유통기한 배지 스타일 */
+.shelf-life-badge {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.shelf-life-badge.shelf-life-good {
+    color: inherit;
+}
+
+.shelf-life-badge.shelf-life-warning {
+    color: #f39c12;
+}
+
+.shelf-life-badge.shelf-life-danger {
+    color: #e74c3c;
+}
+
 .stock-bar {
     width: 100%;
     height: 30px;
@@ -683,6 +701,14 @@ body[data-theme="dark"] .status-badge.warning {
 body[data-theme="dark"] .status-badge.danger {
     background: #5d1f1f;
     color: #ef9a9a;
+}
+
+body[data-theme="dark"] .shelf-life-badge.shelf-life-warning {
+    color: #ffb84d;
+}
+
+body[data-theme="dark"] .shelf-life-badge.shelf-life-danger {
+    color: #ff6b6b;
 }
 
 body[data-theme="dark"] .page-btn {

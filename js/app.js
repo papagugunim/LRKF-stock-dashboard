@@ -600,6 +600,25 @@ function getStatusBadge(status) {
     return `<span class="status-badge ${statusClass}">${status}</span>`;
 }
 
+// 유통기한 배지 생성
+function getShelfLifeBadge(shelfLifeRange, shelfLifeNum) {
+    let className = '';
+    let emoji = '';
+
+    if (shelfLifeNum < 60) {
+        className = 'shelf-life-danger';
+        emoji = '⚠️ ';
+    } else if (shelfLifeNum < 80) {
+        className = 'shelf-life-warning';
+        emoji = '';
+    } else {
+        className = 'shelf-life-good';
+        emoji = '';
+    }
+
+    return `<span class="shelf-life-badge ${className}">${emoji}${shelfLifeRange}</span>`;
+}
+
 // 재고 바 차트 생성
 function createStockBar(stock, maxStock) {
     const percentage = (stock / maxStock) * 100;
@@ -652,7 +671,7 @@ function renderTable() {
             <td>${item['패키지'] || '-'}</td>
             <td>${getStatusBadge(item['보관상태'])}</td>
             <td><span class="stock-number">${formatNumber(Math.round(item.stockNum))}</span></td>
-            <td>${item['유통기한구간']}</td>
+            <td>${getShelfLifeBadge(item['유통기한구간'], item.shelfLifeNum)}</td>
         </tr>
     `).join('');
 
