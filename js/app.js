@@ -639,11 +639,9 @@ function renderTable() {
     const pageData = filteredData.slice(startIndex, endIndex);
 
     if (pageData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">데이터가 없습니다.</td></tr>';
         return;
     }
-
-    const maxStock = Math.max(...filteredData.map(item => item.stockNum));
 
     tableBody.innerHTML = pageData.map(item => `
         <tr>
@@ -655,7 +653,6 @@ function renderTable() {
             <td>${getStatusBadge(item['보관상태'])}</td>
             <td><span class="stock-number">${formatNumber(Math.round(item.stockNum))}</span></td>
             <td>${item['유통기한구간']}</td>
-            <td>${createStockBar(item.stockNum, maxStock)}</td>
         </tr>
     `).join('');
 
