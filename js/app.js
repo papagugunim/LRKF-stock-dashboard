@@ -455,19 +455,23 @@ async function loadAllFilters() {
 
 // 필터 이벤트 리스너 설정
 function setupFilterListeners() {
+    // 기존 리스너 제거
     document.getElementById('warehouseFilter').removeEventListener('change', applyFilters);
     document.getElementById('regionFilter').removeEventListener('change', applyFilters);
     document.getElementById('categoryMainFilter').removeEventListener('change', applyFilters);
     document.getElementById('categoryFilter').removeEventListener('change', applyFilters);
     document.getElementById('productFilter').removeEventListener('change', applyFilters);
     document.getElementById('searchInput').removeEventListener('input', applyFilters);
+    document.getElementById('resetFiltersBtn').removeEventListener('click', resetFilters);
 
+    // 새 리스너 등록
     document.getElementById('warehouseFilter').addEventListener('change', applyFilters);
     document.getElementById('regionFilter').addEventListener('change', applyFilters);
     document.getElementById('categoryMainFilter').addEventListener('change', applyFilters);
     document.getElementById('categoryFilter').addEventListener('change', applyFilters);
     document.getElementById('productFilter').addEventListener('change', applyFilters);
     document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
 
     console.log('필터 이벤트 리스너 등록 완료');
 }
@@ -734,6 +738,8 @@ function applyFilters() {
 
 // 필터 초기화
 function resetFilters() {
+    console.log('필터 초기화 버튼 클릭됨');
+
     // 모든 select 필터를 "전체"로 초기화
     document.getElementById('warehouseFilter').value = 'LProduct';
     document.getElementById('regionFilter').value = 'all';
