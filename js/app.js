@@ -917,6 +917,23 @@ function renderTreemap() {
             formatter: function(params) {
                 if (params.treePathInfo && params.treePathInfo.length > 1) {
                     const item = params.data;
+                    // 개별 제품인 경우
+                    if (item.productCode) {
+                        return `
+                            <div style="font-size: 18px; font-weight: bold; color: #5f7d95; margin-bottom: 8px;">
+                                ${item.productCode}
+                            </div>
+                            <div style="font-size: 14px; margin-bottom: 4px;">
+                                <strong>${params.name}</strong>
+                            </div>
+                            <div style="font-size: 13px; color: #666;">
+                                재고량: <strong>${formatNumber(Math.round(params.value))}</strong> 박스<br/>
+                                유통기한: <strong>${item.shelfLife ? item.shelfLife.toFixed(1) : 0}%</strong><br/>
+                                카테고리: ${params.treePathInfo[1].name}
+                            </div>
+                        `;
+                    }
+                    // 카테고리인 경우
                     return `
                         <strong>${params.name}</strong><br/>
                         재고량: ${formatNumber(Math.round(params.value))} 박스<br/>
