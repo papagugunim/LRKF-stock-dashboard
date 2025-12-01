@@ -126,6 +126,38 @@ function handleLogout() {
 }
 
 // ============================================
+// 탭 전환 관리
+// ============================================
+
+// 탭 전환 함수
+function switchTab(tabName) {
+    // 모든 탭 버튼과 컨텐츠에서 active 클래스 제거
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // 선택한 탭 버튼과 컨텐츠에 active 클래스 추가
+    const selectedBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    const selectedContent = document.getElementById(`${tabName}View`);
+
+    if (selectedBtn) selectedBtn.classList.add('active');
+    if (selectedContent) selectedContent.classList.add('active');
+
+    // 트리맵 탭으로 전환 시 차트 리사이즈
+    if (tabName === 'treemap' && treemapChart) {
+        setTimeout(() => {
+            treemapChart.resize();
+        }, 300); // 애니메이션 완료 후 리사이즈
+    }
+
+    // 현재 탭 상태 저장
+    localStorage.setItem('currentTab', tabName);
+}
+
+// ============================================
 // 다크모드 관리
 // ============================================
 
@@ -1208,6 +1240,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 로그인 상태 체크
     const isLoggedIn = checkAuth();
+
+    // 탭 버튼 이벤트 리스너 (로그인 여부와 관계없이 설정)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+    });
+
+    // 저장된 탭 상태 복원
+    if (isLoggedIn) {
+        const savedTab = localStorage.getItem('currentTab');
+        if (savedTab && (savedTab === 'table' || savedTab === 'treemap')) {
+            switchTab(savedTab);
+        }
+    }
 
     // 로그인 폼 이벤트
     document.getElementById('loginForm').addEventListener('submit', handleLogin);

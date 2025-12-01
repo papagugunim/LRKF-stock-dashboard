@@ -107,6 +107,74 @@ header h1 {
     opacity: 0.8;
 }
 
+/* ============================================
+   보기 방식 탭
+   ============================================ */
+
+.view-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #7f8c8d;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    top: 2px;
+}
+
+.tab-btn:hover {
+    color: #5f7d95;
+    background: rgba(95, 125, 149, 0.05);
+}
+
+.tab-btn.active {
+    color: #5f7d95;
+    border-bottom-color: #5f7d95;
+    font-weight: 600;
+}
+
+.tab-icon {
+    font-size: 1.2rem;
+}
+
+.tab-label {
+    font-size: 1rem;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .filters {
     display: flex;
     gap: 15px;
@@ -633,6 +701,24 @@ body[data-theme="dark"] .card {
 
 body[data-theme="dark"] .card:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+body[data-theme="dark"] .view-tabs {
+    border-bottom-color: #444;
+}
+
+body[data-theme="dark"] .tab-btn {
+    color: #95a5a6;
+}
+
+body[data-theme="dark"] .tab-btn:hover {
+    color: #bdc3c7;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body[data-theme="dark"] .tab-btn.active {
+    color: #ecf0f1;
+    border-bottom-color: #5f7d95;
 }
 
 body[data-theme="dark"] .filters {
