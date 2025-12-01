@@ -865,6 +865,7 @@ function prepareTreemapData() {
                 }
             },
             productCode: item['제품코드'],
+            salesRegion: item['판매지'],
             region: item['지역'],
             taste: item['맛'],
             package: item['패키지']
@@ -927,6 +928,7 @@ function renderTreemap() {
                                 <strong>${params.name}</strong>
                             </div>
                             <div style="font-size: 13px; color: #666;">
+                                판매지: <strong>${item.salesRegion || '-'}</strong><br/>
                                 재고량: <strong>${formatNumber(Math.round(params.value))}</strong> 박스<br/>
                                 유통기한: <strong>${item.shelfLife ? item.shelfLife.toFixed(1) : 0}%</strong><br/>
                                 카테고리: ${params.treePathInfo[1].name}
