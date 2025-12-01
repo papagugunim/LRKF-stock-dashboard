@@ -851,7 +851,7 @@ function prepareTreemapData() {
         }
 
         categoryGroups[category].push({
-            name: `${item['제품코드']}\n${item['지역']} ${item['맛']} ${item['패키지']}`,
+            name: `${item['지역']} ${item['맛']} ${item['패키지']}`,
             value: item.stockNum,
             shelfLife: item.shelfLifeNum,
             itemStyle: {
@@ -859,10 +859,9 @@ function prepareTreemapData() {
             },
             label: {
                 formatter: function(params) {
-                    const lines = params.name.split('\n');
                     const stock = Math.round(params.value);
                     const shelfLife = params.data.shelfLife.toFixed(0);
-                    return `${lines[0]}\n${lines[1]}\n${formatNumber(stock)}박스\n${shelfLife}%`;
+                    return `${params.name}\n${formatNumber(stock)}박스 / ${shelfLife}%`;
                 }
             },
             productCode: item['제품코드'],
