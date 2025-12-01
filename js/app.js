@@ -906,7 +906,21 @@ function renderTreemap() {
                 data: data,
                 roam: false,
                 breadcrumb: {
-                    show: false
+                    show: true,
+                    left: 'center',
+                    top: 5,
+                    itemStyle: {
+                        color: isDarkMode ? '#34495e' : '#e0e0e0',
+                        borderColor: isDarkMode ? '#7f8c8d' : '#bbb',
+                        borderWidth: 1,
+                        shadowColor: 'rgba(0, 0, 0, 0.2)',
+                        shadowBlur: 3
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            color: isDarkMode ? '#5a6d7e' : '#d0d0d0'
+                        }
+                    }
                 },
                 label: {
                     show: true,
