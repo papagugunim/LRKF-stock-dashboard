@@ -983,6 +983,23 @@ function renderTreemap() {
                     borderWidth: 2,
                     gapWidth: 2
                 },
+                emphasis: {
+                    itemStyle: {
+                        borderWidth: 5,
+                        borderColor: '#5f7d95',
+                        shadowBlur: 15,
+                        shadowColor: 'rgba(95, 125, 149, 0.6)'
+                    },
+                    label: {
+                        fontSize: 20,
+                        fontWeight: 'bold',
+                        color: isDarkMode ? '#ffffff' : '#2c3e50'
+                    },
+                    upperLabel: {
+                        fontSize: 22,
+                        fontWeight: 'bold'
+                    }
+                },
                 levels: [
                     {
                         itemStyle: {
