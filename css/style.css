@@ -936,7 +936,7 @@ body[data-theme="dark"] .remember-me span {
     margin: 0;
     background: white;
     border-radius: 12px;
-    padding: 15px;
+    padding: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     height: calc(100vh - 450px);
     min-height: 600px;
@@ -948,13 +948,13 @@ body[data-theme="dark"] .remember-me span {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
     gap: 10px;
 }
 
 .treemap-header h2 {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     color: #2c3e50;
     margin: 0;
 }
@@ -975,13 +975,13 @@ body[data-theme="dark"] .remember-me span {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #666;
 }
 
 .legend-color {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 3px;
     display: inline-block;
 }

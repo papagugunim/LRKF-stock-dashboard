@@ -953,13 +953,17 @@ function renderTreemap() {
                 type: 'treemap',
                 data: data,
                 roam: false,
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 breadcrumb: {
                     show: false
                 },
                 label: {
                     show: true,
-                    fontSize: 11,
-                    lineHeight: 14,
+                    fontSize: 12,
+                    lineHeight: 16,
                     overflow: 'truncate',
                     ellipsis: '...',
                     color: textColor
