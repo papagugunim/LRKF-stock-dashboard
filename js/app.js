@@ -798,12 +798,12 @@ function createShelfLifeBar(percentage) {
 // 트리맵 시각화
 // ============================================
 
-// 유통기한에 따른 색상 반환
+// 유통기한에 따른 색상 반환 (톤 다운된 색상)
 function getColorByShelfLife(shelfLifePercent) {
-    if (shelfLifePercent >= 90) return '#52c41a'; // 녹색 (90%+)
-    if (shelfLifePercent >= 80) return '#faad14'; // 노란색 (80-90%)
-    if (shelfLifePercent >= 60) return '#ff7a45'; // 주황색 (60-80%)
-    return '#f5222d'; // 빨간색 (0-60%)
+    if (shelfLifePercent >= 90) return '#88b06a'; // 부드러운 녹색 (90%+)
+    if (shelfLifePercent >= 80) return '#e6b84f'; // 부드러운 노란색 (80-90%)
+    if (shelfLifePercent >= 60) return '#e88d5f'; // 부드러운 주황색 (60-80%)
+    return '#d45f5f'; // 부드러운 빨간색 (0-60%)
 }
 
 // 트리맵 데이터 준비
@@ -969,9 +969,21 @@ function renderTreemap() {
     // 차트 렌더링
     treemapChart.setOption(option);
 
-    // 클릭 이벤트: 클릭한 제품으로 테이블 필터링
+    // 클릭 이벤트: 클릭한 카테고리 또는 제품으로 필터링
     treemapChart.on('click', function(params) {
-        if (params.data && params.data.productCode) {
+        // 카테고리를 클릭한 경우 (children이 있는 경우)
+        if (params.data && params.data.children) {
+            const categoryName = params.data.name;
+            const categoryMainFilter = document.getElementById('categoryMainFilter');
+
+            // 카테고리 필터 설정
+            if (categoryMainFilter) {
+                categoryMainFilter.value = categoryName;
+                handleFilterChange();
+            }
+        }
+        // 개별 제품을 클릭한 경우
+        else if (params.data && params.data.productCode) {
             // 제품코드로 검색
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {

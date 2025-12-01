@@ -846,8 +846,8 @@ body[data-theme="dark"] .remember-me span {
    ============================================ */
 
 .treemap-section {
-    width: 95%;
-    margin: 25px auto;
+    width: 100%;
+    margin: 25px 0;
     background: white;
     border-radius: 12px;
     padding: 20px;
