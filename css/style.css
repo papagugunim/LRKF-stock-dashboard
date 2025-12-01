@@ -840,3 +840,97 @@ body[data-theme="dark"] .remember-me span {
         font-size: 1.6rem;
     }
 }
+
+/* ============================================
+   트리맵 섹션
+   ============================================ */
+
+.treemap-section {
+    margin: 25px 0;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.treemap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.treemap-header h2 {
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.treemap-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.treemap-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+#treemapChart {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 다크모드 - 트리맵 */
+body[data-theme="dark"] .treemap-section {
+    background: #2c3e50;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme="dark"] .treemap-header h2 {
+    color: #ecf0f1;
+}
+
+body[data-theme="dark"] .legend-item {
+    color: #bdc3c7;
+}
+
+/* 반응형 - 트리맵 */
+@media (max-width: 768px) {
+    .treemap-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .treemap-legend {
+        font-size: 0.75rem;
+    }
+
+    .legend-color {
+        width: 14px;
+        height: 14px;
+    }
+
+    #treemapChart {
+        height: 350px !important;
+    }
+}

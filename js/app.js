@@ -171,6 +171,11 @@ function toggleDarkMode() {
             darkModeToggleLogin.textContent = '라이트모드';
         }
     }
+
+    // 트리맵이 렌더링되어 있으면 다시 렌더링 (다크모드 색상 적용)
+    if (treemapChart && filteredData.length > 0) {
+        renderTreemap();
+    }
 }
 
 // ============================================
@@ -185,6 +190,7 @@ let currentPage = 1;
 let itemsPerPage = 100;
 let sortColumn = null;
 let sortDirection = 'asc';
+let treemapChart = null; // ECharts 트리맵 인스턴스
 
 // CSV 파싱 함수
 function parseCSV(text) {
@@ -788,6 +794,187 @@ function createShelfLifeBar(percentage) {
     `;
 }
 
+// ============================================
+// 트리맵 시각화
+// ============================================
+
+// 유통기한에 따른 색상 반환
+function getColorByShelfLife(shelfLifePercent) {
+    if (shelfLifePercent >= 90) return '#52c41a'; // 녹색 (90%+)
+    if (shelfLifePercent >= 80) return '#faad14'; // 노란색 (80-90%)
+    if (shelfLifePercent >= 60) return '#ff7a45'; // 주황색 (60-80%)
+    return '#f5222d'; // 빨간색 (0-60%)
+}
+
+// 트리맵 데이터 준비
+function prepareTreemapData() {
+    // 대분류별로 그룹화
+    const categoryGroups = {};
+
+    filteredData.forEach(item => {
+        const category = item['대분류'] || '기타';
+
+        if (!categoryGroups[category]) {
+            categoryGroups[category] = [];
+        }
+
+        categoryGroups[category].push({
+            name: `${item['제품코드']}\n${item['지역']} ${item['맛']} ${item['패키지']}`,
+            value: item.stockNum,
+            shelfLife: item.shelfLifeNum,
+            itemStyle: {
+                color: getColorByShelfLife(item.shelfLifeNum)
+            },
+            label: {
+                formatter: function(params) {
+                    const lines = params.name.split('\n');
+                    const stock = Math.round(params.value);
+                    const shelfLife = params.data.shelfLife.toFixed(0);
+                    return `${lines[0]}\n${lines[1]}\n${formatNumber(stock)}박스\n${shelfLife}%`;
+                }
+            },
+            productCode: item['제품코드'],
+            region: item['지역'],
+            taste: item['맛'],
+            package: item['패키지']
+        });
+    });
+
+    // ECharts treemap 형식으로 변환
+    const treemapData = Object.keys(categoryGroups).map(category => {
+        const items = categoryGroups[category];
+        const totalStock = items.reduce((sum, item) => sum + item.value, 0);
+
+        return {
+            name: category,
+            value: totalStock,
+            children: items
+        };
+    });
+
+    return treemapData;
+}
+
+// 트리맵 렌더링
+function renderTreemap() {
+    const chartDom = document.getElementById('treemapChart');
+
+    if (!chartDom) {
+        console.error('treemapChart 요소를 찾을 수 없습니다');
+        return;
+    }
+
+    // 기존 차트가 있으면 제거
+    if (treemapChart) {
+        treemapChart.dispose();
+    }
+
+    // 새 차트 인스턴스 생성
+    treemapChart = echarts.init(chartDom);
+
+    // 데이터 준비
+    const data = prepareTreemapData();
+
+    // 다크모드 확인
+    const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+    const textColor = isDarkMode ? '#ecf0f1' : '#2c3e50';
+    const borderColor = isDarkMode ? '#34495e' : '#555';
+
+    // 차트 옵션 설정
+    const option = {
+        tooltip: {
+            formatter: function(params) {
+                if (params.treePathInfo && params.treePathInfo.length > 1) {
+                    const item = params.data;
+                    return `
+                        <strong>${params.name}</strong><br/>
+                        재고량: ${formatNumber(Math.round(params.value))} 박스<br/>
+                        유통기한: ${item.shelfLife ? item.shelfLife.toFixed(1) : 0}%<br/>
+                        카테고리: ${params.treePathInfo[1].name}
+                    `;
+                } else {
+                    return `
+                        <strong>${params.name}</strong><br/>
+                        총 재고량: ${formatNumber(Math.round(params.value))} 박스
+                    `;
+                }
+            }
+        },
+        series: [
+            {
+                type: 'treemap',
+                data: data,
+                roam: false,
+                breadcrumb: {
+                    show: false
+                },
+                label: {
+                    show: true,
+                    fontSize: 11,
+                    lineHeight: 14,
+                    overflow: 'truncate',
+                    ellipsis: '...',
+                    color: textColor
+                },
+                upperLabel: {
+                    show: true,
+                    height: 30,
+                    fontSize: 13,
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)'
+                },
+                itemStyle: {
+                    borderColor: isDarkMode ? '#34495e' : '#fff',
+                    borderWidth: 2,
+                    gapWidth: 2
+                },
+                levels: [
+                    {
+                        itemStyle: {
+                            borderColor: borderColor,
+                            borderWidth: 4,
+                            gapWidth: 4
+                        },
+                        upperLabel: {
+                            show: true
+                        }
+                    },
+                    {
+                        colorSaturation: [0.35, 0.5],
+                        itemStyle: {
+                            gapWidth: 2,
+                            borderColorSaturation: 0.6
+                        }
+                    }
+                ]
+            }
+        ]
+    };
+
+    // 차트 렌더링
+    treemapChart.setOption(option);
+
+    // 클릭 이벤트: 클릭한 제품으로 테이블 필터링
+    treemapChart.on('click', function(params) {
+        if (params.data && params.data.productCode) {
+            // 제품코드로 검색
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = params.data.productCode;
+                applyFilters();
+            }
+        }
+    });
+
+    // 윈도우 리사이즈 대응
+    window.addEventListener('resize', function() {
+        if (treemapChart) {
+            treemapChart.resize();
+        }
+    });
+}
+
 // 테이블 렌더링
 function renderTable() {
     const tableBody = document.getElementById('stockTableBody');
@@ -897,6 +1084,7 @@ function applyFilters() {
     currentPage = 1;
     updateSummary();
     renderTable();
+    renderTreemap();
 }
 
 // 필터 초기화

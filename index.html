@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>롯데제과 러시아법인 - 재고 현황</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- ECharts 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 </head>
 <body>
     <!-- 로그인 페이지 -->
@@ -84,6 +86,22 @@
                 <div class="card-value warning" id="warningCount">-</div>
                 <div class="card-unit">박스</div>
             </div>
+        </div>
+
+        <!-- 재고 현황 트리맵 -->
+        <div class="treemap-section">
+            <div class="treemap-header">
+                <h2>📊 재고 현황 트리맵</h2>
+                <div class="treemap-controls">
+                    <div class="treemap-legend">
+                        <span class="legend-item"><span class="legend-color" style="background: #52c41a;"></span> 90%+ (양호)</span>
+                        <span class="legend-item"><span class="legend-color" style="background: #faad14;"></span> 80-90% (주의)</span>
+                        <span class="legend-item"><span class="legend-color" style="background: #ff7a45;"></span> 60-80% (경고)</span>
+                        <span class="legend-item"><span class="legend-color" style="background: #f5222d;"></span> 0-60% (위험)</span>
+                    </div>
+                </div>
+            </div>
+            <div id="treemapChart" style="width: 100%; height: 500px;"></div>
         </div>
 
         <div class="filters">
